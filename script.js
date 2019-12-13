@@ -1,40 +1,64 @@
-/*var GroupOfModers = document.querySelector("#user-profile > div.profile-header.profile-header-special > div > div:nth-child(2) > div > span:nth-child(2)");
-var stringGroupOfModers = GroupOfModers.innerHTML;
-if (stringGroupOfModers.indexOf('Модератор основного раздела') != -1) {
-    ;
-}*/
-//var UrlOfTopic = document.querySelector("#user-profile > div.profile-content > div.profile-tab-content > div > div.stream-container > ul > li:nth-child(1) > div > div.stream-item-header > div > p > a");
+let myCtg = {
+	// Список категорий для групп пользователей
+	modGroupList: {
+		"Модератор других игр, CS:GO и разного": ["Другие игры", "Counter-Strike: Global Offensive", "Разное"],
+		"Модератор технического раздела": ["Технический раздел"],
+		"Модератор основного раздела": ["Основной раздел"]
+	},
 
-//var NameOfSection = document.querySelector(".search-results-list .meta a[href*="forums"]");
-//let massive = document.querySelectorAll('.search-results-list .meta a[href*="forums/geroi-obschie-obsuzhdenija"]').map(a => a.innerHTML);
+	// Список форумов в категориях
+	categories: {
+		"Основной раздел": ["Общие вопросы и обсуждения", "Обитель нытья", "Dota Plus, компендиумы и ивенты", "Обновления и патчи", "Рейтинговая система и статистика", "Герои: общие обсуждения", "Dream Dota", "Нестандартные сборки", "Киберспорт: общие обсуждения", "Игроки и команды", "Турниры, матчи и прогнозы", "Поиск игроков для ммр и паб игр", "Поиск игроков для создания команды", "Поиск команды для совместных игр и участия в турнирах", "Поиск игроков для ивентов и абузов", "Обмен предметами и гифтами", "Обсуждения и цены", "Медиа Dota 2", "Стримы","Развитие портала"],
+		"Counter-Strike: Global Offensive": ["[CS:GO] Общие вопросы и обсуждения", "[CS:GO] Обновления и патчи", "[CS:GO] Киберспорт", "[CS:GO] Обменник"],
+		"Технический раздел": ["Техническая поддержка по Dota 2", "Железо и обсуждения", "Сборка ПК, значительный апгрейд", "Выбор комплектующих, ноутбуков, консолей", "Компьютерная помощь по остальным вопросам", "Игровые девайсы, периферия и прочая техника", "Мобильные девайсы", "Софт и прочие технические вопросы", "Steam", "Программирование"],
+		"Другие игры": ["Другие игры", "The Elder Scrolls", "Path of Exile", "Shooter, Battle Royale", "Apex Legends", "ККИ", "Hearthstone", "Artifact", "League of Legends", "MMO (RPG, FPS, RTS)", "World of Warcraft", "Dota Underlords", "Dota Auto Chess", "Консольные игры", "Мобильные игры"],
+		"Разное": ["Таверна", "Творчество", "Музыка", "Кино и сериалы", "Аниме и прочее", "Спорт", "Книги"]
+	},
+	
+	// Получение группы пользователя
+	loadGroupName: async () => {
+        return await fetch(`/forum/members/${Utils.user_id}/`).then(a => a.text()).then(r => {
+            let div = document.createElement('div');
+            div.innerHTML = r;
 
-//let massive = [...document.querySelectorAll(`.search-results-list .meta a[href*="forums/obschie-voprosy-i-obsuzhdenija"]`)].map(a => a.innerHTML);
-//document.getElementById("test").style.color = "#00FF00";
+            return div.querySelector('.group').innerHTML.trim();
+        });
+    },
 
-function upload (url) {
-    return fetch(chrome.extension.getURL(url))
-        .then ( function (response) { return response.text() })
-        .then ( function (html) { 
-        let doc = document.createElement('script');
-        doc.innerHTML = html;
-        
-        document.head.append(doc);
-    });
+	// Получить форумы для группы пользователя
+	getForums: function () {
+		return this.loadGroupName().then(group => {
+			let list = this.modGroupList[group], result = [];
+			
+			if (list === undefined) {
+				console.log(`Пользователь ${Utils.username} не состоит ни в одной из групп модераторов разделов.\nЕго группа: ${group}.`);
+				return [];
+            }
+
+			for (cat in this.categories) {
+				if (list.indexOf(cat) !== ~false) {
+					result = result.concat(this.categories[cat]);
+				}
+			}
+			
+			return result;
+		});
+    },
+	
+	// Инициализация
+	init: function () {
+		this.getForums().then(response => {
+			document.querySelectorAll('.search-results-list li').forEach(el => {
+				let fold = el.querySelector('.meta a[href*="forums/"]').innerHTML;
+
+				if (response.indexOf(fold) === ~false) {
+					el.style.setProperty('opacity', '0.4');
+				}
+			});
+		})
+	}
 }
 
-function getCategoryList (category) {
-    let contentList = document.querySelectorAll('.page-container > ul.content-list > li'), result = {};
-
-    console.log(`LOC: ${location.href}`, `CAT: ${category}`, `CONTENT_LIST: `, contentList);
-
-    for (list of contentList) {
-        let categoryName = list.querySelector('a[href*="category"]').innerHTML.trim();
-        result[categoryName] = [...list.querySelectorAll('a[href*="forums/"]')].map(a => a.innerHTML.trim());
-    }
-
-    return category ? result[category] : result;
-}
-let massive = getCategoryList('Основной раздел');
-if (massive.indexOf('Киберспорт') != -1) {
-    alert("!!!");
-}
+window.addEventListener('DOMContentLoaded', function() {
+    myCtg.init();
+ });
