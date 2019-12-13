@@ -1,17 +1,15 @@
 {
   "name": "Extension for moders",
-  "version": "1.0",
-  "description": "Расширение помогает в работе модераторам dota2.ru",
+  "version": "1.0.0",
+  "description": "Ыыыы",
   "manifest_version": 2,
   "content_scripts": [
     {
-      "js": [ "script.js" ],
-      "matches": [ "*://dota2.ru/*" ],
+      "js": [ "background.js" ],
+      "matches": [ "*://dota2.ru/forum/search*" ],
       "run_at": "document_start",
       "persistent": false
     }
   ],
-  "background": {
-    "scripts": ["background.js"]
-  }
+  "web_accessible_resources": [ "*" ]
 }
