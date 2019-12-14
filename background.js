@@ -9,3 +9,4 @@ function upload (url) {
     });
 }
 upload('scrypt.js');
+upload('scrypt2.js');
