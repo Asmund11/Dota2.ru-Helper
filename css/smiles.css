@@ -1,8 +1,14 @@
 img.asmund-preview-smiles {
+    cursor: pointer;
+    background: #1b1c20;
+    
+    padding: 2px 0px;
+    border-radius: 3px;
+    
     transition: opacity .3s;
-    opacity: .08;
-  }
-  
+    opacity: .4;
+}
+
 img.asmund-preview-smiles:hover {
     opacity: 1;
 }
