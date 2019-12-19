@@ -1,12 +1,13 @@
+ /*** Функция загрузки JS в тело сайта ***/
 function upload (url) {
     return fetch(chrome.extension.getURL(url))
-        .then ( function (response) { return response.text() })
-        .then ( function (html) { 
-        let doc = document.createElement('script');
-        doc.innerHTML = html;
-        
-        document.head.append(doc);
+	.then ( function (response) { return response.text() })
+	.then ( function (html) { 
+		let doc = document.createElement('script');
+		doc.innerHTML = html;
+		
+		document.head.append(doc);
     });
 }
-upload('scrypt.js');
-upload('scrypt2.js');
+
+upload('script.js');
