@@ -1,0 +1,8 @@
+img.asmund-preview-smiles {
+    transition: opacity .3s;
+    opacity: .08;
+  }
+  
+img.asmund-preview-smiles:hover {
+    opacity: 1;
+}
