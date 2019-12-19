@@ -180,7 +180,7 @@ const Asmund = {
 	},
 	
 
-	favorites_emotions: {
+	favourites_emotions: {
 		init: function () {
 			document.querySelectorAll('.message-list .postDataHolder').forEach(el => {
 				let Smiles = document.createElement('li');
@@ -195,7 +195,7 @@ const Asmund = {
 	init: function () {
 		this.highlight.init();
 		this.emotions.init();
-		this.favorites_emotions.init();
+		this.favourites_emotions.init();
 	}
 }
 
