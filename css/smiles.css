@@ -6,7 +6,7 @@ img.asmund-preview-smiles {
     border-radius: 3px;
     
     transition: opacity .3s;
-    opacity: .4;
+    opacity: .08;
 }
 
 img.asmund-preview-smiles:hover {
