@@ -178,25 +178,55 @@ const Asmund = {
 				this.render (i.post.dom, i.user.name, i.smile.image);
 		}
 	},
-	
 
-	favourites_emotions: {
-		init: function () {
-			document.querySelectorAll('.message-list .postDataHolder').forEach(el => {
-				let Smiles = document.createElement('li');
-				Smiles.style = "padding: 0px 7px; background: #1b1c20; margin-top: 0x;";
-				Smiles.innerHTML = '<img class="asmund-preview-smiles" src="/img/forum/emoticons/FeelsClownMan.png?1552738440">';
-  				el.after(Smiles);
-			});
-		}
-	},
 
-	 /*** Общая инициализация компонентов ***/
-	init: function () {
-		this.highlight.init();
-		this.emotions.init();
-		this.favourites_emotions.init();
-	}
+
+	/**
+	 * Избранные смайлы под постом
+	 */
+	favoritesEmotions: {
+        getPinned: () => {
+            let pinned = localStorage.getItem('asmund-pinned-emotions');
+            return pinned !== null ? JSON.parse(pinned) : [{
+                id: 1033, 
+                src: "/img/forum/emoticons/FeelsClownMan.png?1552738440"
+            }]; // Для примера feelsClownMan, т.к. отсутствуют смайлы в целом
+        },
+        
+        render: (dom, smile) => {
+            let a = document.createElement('a');
+			
+            a.setAttribute('data-asmund-sid', smile.id);
+			a.setAttribute('onclick', `javascript: Topic.setPostRate(${dom.id}, ${smile.id}); return false;`);
+            a.innerHTML = `<img class="asmund-preview-smiles" src="${smile.src}">`;
+            
+            dom.post.append(a);
+        },
+        
+        init: function () {
+            let holderList = document.querySelectorAll('.message-list > li'),
+                smiles = this.getPinned();
+            
+            for (holder of holderList) {
+                for (smile of smiles) {
+                    this.render({
+                            post: holder.querySelector('.postDataHolder'), 
+                            id: holder.dataset.id
+                        }, 
+                        smile
+                    );
+                }
+            }
+        }
+    },
+
+
+     /*** Общая инициализация компонентов ***/
+    init: function () {
+        this.highlight.init();
+        this.emotions.init();
+        this.favoritesEmotions.init();
+    }
 }
 
 window.addEventListener('DOMContentLoaded', function() {
