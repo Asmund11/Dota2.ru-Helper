@@ -183,22 +183,10 @@ const Asmund = {
 	favorites_emotions: {
 		init: function () {
 			document.querySelectorAll('.message-list .postDataHolder').forEach(el => {
-				//el.after('after');
 				let Smiles = document.createElement('li');
 				Smiles.style = "padding: 0px 7px; background: #1b1c20; margin-top: 0x;";
-				Smiles.style.setProperty('opacity', '0.09');
-  				Smiles.innerHTML = '<img src="/img/forum/emoticons/FeelsClownMan.png?1552738440">';
+				Smiles.innerHTML = '<img class="asmund-preview-smiles" src="/img/forum/emoticons/FeelsClownMan.png?1552738440">';
   				el.after(Smiles);
-				Smiles.onmouseover = function() {mouseOver()};
-				Smiles.onmouseout = function() {mouseOut()};
-
-				function mouseOver() {
-					Smiles.style.setProperty('opacity', '1.0');
-				}
-
-				function mouseOut() {
-					Smiles.style.setProperty('opacity', '0.08');
-				}
 			});
 		}
 	},
