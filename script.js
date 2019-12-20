@@ -201,8 +201,35 @@ const Asmund = {
             a.innerHTML = `<img class="asmund-preview-smiles" src="${smile.src}">`;
             
             dom.post.append(a);
-        },
-        
+		},
+
+		/*getfetchSmiles: (pid) => {
+			return fetch("/forum/api/forum/getPopularUsedSmiles", {
+				method: "POST",
+				headers: { "x-requested-with": "XMLHttpRequest" },
+				body: JSON.stringify({
+					"pid": pid // ID поста
+				})
+			}).then(r => r.json());
+		},
+
+		getSmiles: async function () {
+			let p = dom.id;
+			let res = await this.getfetchSmiles(p.pid).then(response => {
+				document.querySelectorAll('.tab_panel a').forEach(elem => {
+					elem.setAttribute('call', `javascript: Topic.setPostRate(${dom.id}, ${smile.id}); return false;`);
+			});
+		},
+		
+		contextmenu: (dom, smile) => {
+			document.querySelectorAll('.postDataHolder a').forEach(el => {
+				el.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${dom.id},this); return false;`);
+				document.querySelectorAll('.tab_panel a').forEach(elem => {
+					elem.setAttribute('call', `javascript: Topic.setPostRate(${dom.id}, ${smile.id}); return false;`);
+				});
+			});
+		},*/
+
         init: function () {
             let holderList = document.querySelectorAll('.message-list > li'),
                 smiles = this.getPinned();
@@ -214,9 +241,15 @@ const Asmund = {
                             id: holder.dataset.id
                         }, 
                         smile
-                    );
+					);
+					/*this.contextmenu({
+						post: holder.querySelector('.postDataHolder'), 
+						id: holder.dataset.id
+					}, 
+					smile
+				);*/
                 }
-            }
+			}
         }
     },
 
