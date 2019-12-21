@@ -10,7 +10,7 @@
 		"128": "img/128x128.png"
 	},
 	"content_scripts": [{
-		"css": [ "css/smiles.css" ],
+		"css": [ "css/style.css" ],
 		"js": [ "background.js" ],
 		"matches": [ "*://dota2.ru/forum*" ],
 		"run_at": "document_start",
