@@ -1,7 +1,7 @@
 const Asmund = {
-	 /**
-	  * Highlight - подсветка сообщений раздела модератора
-	  */
+	/* Highlight - подсветка сообщений раздела модератора */
+	/*														*/
+	/********************************************************/
 	highlight: {
 		 /*** Список категорий для групп пользователей ***/
 		modGroupList: {
@@ -64,9 +64,12 @@ const Asmund = {
 		}
 	},
 
-	 /**
-	  * Emotions - определение оценки автора цитируемого поста
-	  */
+
+
+
+	/* Emotions - определение оценки автора цитируемого поста */
+	/*														  */
+	/**********************************************************/
 	emotions: {
 		 /*** Получаем все посты, в которых есть цитаты и эмоции под постом ***/
 		getInf: () => {
@@ -181,16 +184,77 @@ const Asmund = {
 
 
 
-	/**
-	 * Избранные смайлы под постом
-	 */
+
+	/* Подсветка цитат удалённых сообщений */
+	/*										*/
+	/************************************** */
+	removeHelper: {
+		getMessages: () => {
+			return [...document.querySelectorAll('#message-list > li')]
+		},
+		
+		getRemovedIDs: (messages) => {
+			return messages.filter(a => a.classList.contains('deleted')).map(a => a.dataset.id)
+		},
+		
+		getQuotedIDs: function () {
+			let messages = this.getMessages(),
+				removedMessages = this.getRemovedIDs(messages),
+				result = [];
+		
+			for (message of messages) {
+				let quote = message.querySelector(`div.bbCodeQuote[data-post-id]`);
+				
+				if (quote !== null) {
+					let id = quote.dataset.postId;
+			
+					if (removedMessages.indexOf(id) !== ~false) {
+					/*result.push({
+						id: message.dataset.id,
+						post: message
+					});*/
+					result.push(message.dataset.id);
+					}
+				}
+			}
+
+			return result;
+		},
+		
+		init: function () {
+			let posts = this.getQuotedIDs();
+			for (el of posts) {
+				let elem = document.getElementById(`post-${el}`);
+				elem.classList.add('asmund-find');
+			}
+		}
+	},
+
+
+
+
+	/* Избранные смайлы под постом */
+	/*								*/
+	/********************************/
 	favoritesEmotions: {
         getPinned: () => {
             let pinned = localStorage.getItem('asmund-pinned-emotions');
             return pinned !== null ? JSON.parse(pinned) : [{
                 id: 1033, 
-                src: "/img/forum/emoticons/FeelsClownMan.png?1552738440"
-            }]; // Для примера feelsClownMan, т.к. отсутствуют смайлы в целом
+				src: "/img/forum/emoticons/FeelsClownMan.png?1552738440",
+			},
+			{
+				id: 370, 
+				src: "/img/forum/emoticons/navi.png?1566518543",
+			},
+			{
+				id: 1053, 
+				src: "/img/forum/emoticons/PepeYes.png?1556510258",
+			},
+			{
+				id: 1054, 
+				src: "/img/forum/emoticons/PepeNo.png?1556510271",
+			}]
         },
         
         render: (dom, smile) => {
@@ -203,31 +267,8 @@ const Asmund = {
             dom.post.append(a);
 		},
 
-		/*getfetchSmiles: (pid) => {
-			return fetch("/forum/api/forum/getPopularUsedSmiles", {
-				method: "POST",
-				headers: { "x-requested-with": "XMLHttpRequest" },
-				body: JSON.stringify({
-					"pid": pid // ID поста
-				})
-			}).then(r => r.json());
-		},
+		/*addsmiles: () => {
 
-		getSmiles: async function () {
-			let p = dom.id;
-			let res = await this.getfetchSmiles(p.pid).then(response => {
-				document.querySelectorAll('.tab_panel a').forEach(elem => {
-					elem.setAttribute('call', `javascript: Topic.setPostRate(${dom.id}, ${smile.id}); return false;`);
-			});
-		},
-		
-		contextmenu: (dom, smile) => {
-			document.querySelectorAll('.postDataHolder a').forEach(el => {
-				el.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${dom.id},this); return false;`);
-				document.querySelectorAll('.tab_panel a').forEach(elem => {
-					elem.setAttribute('call', `javascript: Topic.setPostRate(${dom.id}, ${smile.id}); return false;`);
-				});
-			});
 		},*/
 
         init: function () {
@@ -242,12 +283,6 @@ const Asmund = {
                         }, 
                         smile
 					);
-					/*this.contextmenu({
-						post: holder.querySelector('.postDataHolder'), 
-						id: holder.dataset.id
-					}, 
-					smile
-				);*/
                 }
 			}
         }
@@ -257,8 +292,9 @@ const Asmund = {
      /*** Общая инициализация компонентов ***/
     init: function () {
         this.highlight.init();
-        this.emotions.init();
-        this.favoritesEmotions.init();
+		this.emotions.init();
+		this.removeHelper.init();
+		this.favoritesEmotions.init();
     }
 }
 
