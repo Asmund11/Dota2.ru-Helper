@@ -1,14 +1,48 @@
+/** Стиль для избранных смайлов **/
 img.asmund-preview-smiles {
     cursor: pointer;
     background: #1b1c20;
     
     padding: 2px 0px;
     border-radius: 3px;
+    margin: 0px 3px 0px 0px;
     
     transition: opacity .3s;
-    opacity: .08;
+    opacity: .06;
 }
 
 img.asmund-preview-smiles:hover {
     opacity: 1;
+}
+
+
+
+
+/** Стиль для постов с цитатами удалённых сообщений **/
+.asmund-find:not(.deleted) {
+    position: relative;
+}
+
+.asmund-find:not(.deleted):after {
+    content: 'Цитата!'!important;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    text-align: center;
+    color: #bee0be;
+    position: absolute;
+    background: #194c19;
+    top: 9px;
+    left: 175px;
+    width: 24px;
+    font-size: 17px;
+    clear: unset!important;
+    visibility: unset!important;
+    height: calc(100% - 19px)!important;
+    border-radius: 0 12px 12px 0;
+}
+
+.asmund-find:not(.deleted) .messageInfo {
+    margin-left: 197px!important;
+    border: 2px dashed #194c19;
+    border-radius: 3px;
 }
