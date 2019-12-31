@@ -254,6 +254,10 @@ const Asmund = {
 			{
 				id: 1054, 
 				src: "/img/forum/emoticons/PepeNo.png?1556510271",
+			},
+			{
+				id: 1028, 
+				src: "/img/forum/emoticons/PuckHmmm.png?1551227370",
 			}]
         },
         
