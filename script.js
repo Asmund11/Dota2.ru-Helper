@@ -122,7 +122,7 @@ const Asmund = {
 				for (smile of item.smiles) {
 					let p = item.postInf, s = smile, q = item.quoteInf;
 					
-					 // Работаем с promise, не забывай
+					 // Работаем с promise
 					let res = await this.getUsers(p.pid, s.sid).then(response => {
 						 // Из ответа нам нужны только ID, собираем их
 						let uids = response.map(a => a['user.id']);
@@ -154,7 +154,7 @@ const Asmund = {
 			return result;
 		},
 		
-		 /*** Отрисовка результата, перепишешь под себя ***/
+		 /*** Отрисовка результата ***/
 		render: (post, name, smile) => {
 			let rated = post.querySelector('div[id|="post-rated-list"]');
 			
@@ -175,13 +175,117 @@ const Asmund = {
 					result = e; // Для твоего удобства вывел из promise в синхрон
 				});
 			
-			console.log(result);
+			//console.log(result);
 			
 			for (i of result)
 				this.render (i.post.dom, i.user.name, i.smile.image);
 		}
 	},
 
+
+	emotions_ts: {
+		getInf: () => {
+			return [...document.querySelectorAll('.message-list > li')].map(el => {
+				return {
+					postInf: {
+						post: el,
+						pid: el.dataset.id
+					},
+					quoteInf: [...el.querySelectorAll('.bbCodeQuote')].map(a => {
+						return {
+							name: a.dataset.author,
+							uid: a.dataset.userId
+						}
+					}),
+					smiles: [...el.querySelectorAll('.post-smiles-content a:not(.rate-btn-plus)')].map(b => {
+						return {
+							count: b.dataset.smileCount,
+							sid: b.dataset.smileId,
+							title: b.querySelector('img').getAttribute('title'),
+							image: b.querySelector('img').getAttribute('src')
+						}
+					}).filter(c => c.count > 0)
+				}
+			}).filter(d => d.quoteInf.length == 0 && d.smiles.length > 0);
+		},
+
+		getUsers: (pid, sid) => {
+			return fetch("/forum/api/forum/getUsersWhoRatePost", {
+				method: "POST",
+				headers: { "x-requested-with": "XMLHttpRequest" },
+				body: JSON.stringify({
+					"pid": pid, // ID поста
+					"smileId": sid // ID эмоции
+				})
+			}).then(r => r.json());
+		}, 
+
+		getQuoteRatedUsers: async function () {
+			let info = this.getInf(), result = [];
+			
+			 // Поэтапно отправляем полученные запросы
+			for (item of info) {
+				for (smile of item.smiles) {
+					let p = item.postInf, s = smile, q = item.quoteInf;
+					
+					 // Работаем с promise
+					let res = await this.getUsers(p.pid, s.sid).then(response => {
+						 // Из ответа нам нужны только ID, собираем их
+						let uids = response.map(a => a['user.id']);
+						
+						for (nick of q) {
+							 // Нашлось ID цитируемого - запоминаем
+							if (uids.indexOf(nick.uid) !== ~false) {
+								result.push({
+									post: {
+										dom: p.post, // DOM поста
+										id: p.pid // ID поста
+									},
+									user: {
+										name: nick.name, // Имя пользователя
+										id: nick.uid // ID пользователя
+									},
+									smile: {
+										title: s.title, // Имя смайла-оценки
+										id: s.sid, // ID смайла-оценки
+										image: s.image //Картинка смайла
+									}
+								});
+							}
+						}
+					});
+				}
+			}
+			
+			return result;
+		},
+
+		render: (post, name, smile) => {
+			let rated = post.querySelector('div[id|="post-rated-list"]');
+			
+			if (!rated.querySelector(`[data-name="${name}"]`)) {
+				let title = document.createElement('p');
+				title.style = "padding: 2px 6px; background: #363636; color: #dedede; border-radius: 3px; margin-top: 6px;";
+				title.setAttribute('data-name', name);
+				title.innerHTML = `Автор темы - <b>${name}</b> отреагировал на цитирование - <img src="${smile}">`;
+				
+				rated.append(title);
+			}
+		},
+		
+		 /*** Инициализация emotions ***/
+		init: async function () {
+			let result = [],
+				list = await this.getQuoteRatedUsers().then(e => {
+					result = e; // Для твоего удобства вывел из promise в синхрон
+				});
+			
+			//console.log(result);
+			
+			for (i of result)
+				this.render (i.post.dom, i.user.name, i.smile.image);
+		}
+	},
 
 
 
@@ -293,12 +397,39 @@ const Asmund = {
     },
 
 
+
+	/***  Поиск матерных слов в постах ***/
+	searchBadWords: {
+		getPosts: () => {
+			return [...document.querySelectorAll('.message-list .messageContent p')];
+		},
+
+		init: function () {
+			var posts = this.getPosts();
+			var words = ["смог", "пофиг", "del", "дел"];
+			var n = 0;
+			for (el of posts) {
+				for (elem of words) {
+					if (el.innerHTML.indexOf(elem) != -1) {
+						el.style = "background: #78cc66; color: #000000";
+						n++;
+					}
+				}
+			}
+			alert(n);
+		}
+	},
+
+
+
      /*** Общая инициализация компонентов ***/
     init: function () {
         this.highlight.init();
 		this.emotions.init();
+		this.emotions_ts.init();
 		this.removeHelper.init();
 		this.favoritesEmotions.init();
+		this.searchBadWords.init();
     }
 }
 
