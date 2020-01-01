@@ -406,17 +406,18 @@ const Asmund = {
 
 		init: function () {
 			var posts = this.getPosts();
-			var words = ["смог", "пофиг", "del", "дел"];
+			var words = ["смог", "пофиг", "del", "дел", "вынести"];
+			//var words = ["del", "/дел", "хер", "сука", "пиздец"];
 			var n = 0;
 			for (el of posts) {
 				for (elem of words) {
 					if (el.innerHTML.indexOf(elem) != -1) {
-						el.style = "background: #78cc66; color: #000000";
+						el.style = "background: #f1c40f; color: #000000"; //желтый #f1c40f зелёный #78cc66
 						n++;
 					}
 				}
 			}
-			alert(n);
+			//alert(n);
 		}
 	},
 
