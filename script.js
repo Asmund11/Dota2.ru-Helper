@@ -401,25 +401,127 @@ const Asmund = {
 	/***  Поиск матерных слов в постах ***/
 	searchBadWords: {
 		getPosts: () => {
-			return [...document.querySelectorAll('.message-list .messageContent p')];
+			return [...document.querySelectorAll('.message-list .messageContent .messageText.baseHtml p')];
 		},
 
 		init: function () {
 			var posts = this.getPosts();
-			var words = ["смог", "пофиг", "del", "дел", "вынести"];
-			//var words = ["del", "/дел", "хер", "сука", "пиздец"];
-			var n = 0;
+			var words = ["del", "/дел", "хер", "сука", "суки", "сукам", "пиздец", "хуй", "еба", "нахуй", "*", "блять", "блядь"];
 			for (el of posts) {
 				for (elem of words) {
-					if (el.innerHTML.indexOf(elem) != -1) {
-						el.style = "background: #f1c40f; color: #000000"; //желтый #f1c40f зелёный #78cc66
-						n++;
+					if (el.innerHTML.toLowerCase().indexOf(elem) != -1) {
+						el.style = "background: #f1c40f; color: #000000"; //желтый: #f1c40f зелёный: #78cc66
 					}
 				}
 			}
-			//alert(n);
 		}
 	},
+
+
+
+	/***  Поиск матерных слов в постах ***/
+	/*searchBadWords: {
+		// Список trigger слов
+        trigger: ['del', 'дел', 'хер', 'хуй', 'пизд', 'нах', 'уеб', 'сук'],
+       
+         // Применяемые стили на найденные слова
+        styles: [
+            //'border: 1px dashed green',
+            //'color: #fff',
+            //'padding: 1px 4px',
+			//'margin: -2px -5px'
+
+			'background: #f1c40f',
+			'color: #000000'
+        ],
+       
+         // Получение родительского this
+        This: function () {
+            return this
+        },
+       
+         // Рендер скроллинфы
+        renderInfo: {
+            divider: 1000,
+            windowHeight: 0,
+            fullHeight: 0,
+            canvas: undefined,
+ 
+             // Список элементов
+            list: [],
+           
+            render: function (list, site, wind) {
+                let ct = this.canvas.getContext('2d');
+               
+                console.log(list);
+               
+                for (item of list) {
+                    let y = item.getClientRects()[0].top,
+                        eltop = (y / site) * wind; // element top
+                       
+                    console.log(y, eltop);
+                       
+                    ct.beginPath();
+                    ct.moveTo(20, eltop);
+                    ct.lineTo(5, eltop);
+                    ct.lineTo(8, eltop - 2);
+                    ct.lineTo(8, eltop + 2);
+                    ct.lineTo(5, eltop);
+                    ct.closePath();
+                   
+                    ct.strokeStyle = 'red';
+                    ct.stroke();
+                }
+               
+                document.body.append(this.canvas);
+            },
+           
+            init: function () {
+                this.windowHeight = window.innerHeight;
+                this.fullHeight = document.querySelector('body').offsetHeight;
+               
+                this.canvas = document.createElement('canvas');
+                this.canvas.style = 'position: fixed; right: 0; top: 0; width: 20px; height: 100%';
+                this.canvas.setAttribute('width', '20px');
+                this.canvas.setAttribute('height', `${this.windowHeight}px`);
+               
+                let list = this.list,
+                    sp = this.fullHeight / this.divider, // site percent
+                    wp = this.windowHeight / this.divider; // window percent
+                   
+                console.log(list);
+                   
+                this.render(list, sp, wp);
+            }
+        },
+       
+         // Генератор regexp на основе trigger слов
+        regexp: function () {
+            return new RegExp(`[\/]?(${this.trigger.join('|')})`, 'ig')
+        },
+       
+         // Получение всех строк
+        getStrs: () => {
+            return [...document.querySelectorAll('#message-list p')];
+        },
+         
+         // Инициализация модуля
+        init: function () {
+            let strs = this.getStrs(),
+                rexp = this.regexp(),
+                styles = this.styles.join('; ');
+           
+            for (str of strs) {
+                if (rexp.test(str.innerHTML)) {
+                    str.innerHTML = str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
+                    this.renderInfo.list.push(str);
+                }
+            }
+           
+             // Инициализация рендера
+            this.renderInfo.init();
+        }
+    },*/
 
 
 
