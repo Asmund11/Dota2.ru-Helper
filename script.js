@@ -362,6 +362,10 @@ const Asmund = {
 			{
 				id: 1028, 
 				src: "/img/forum/emoticons/PuckHmmm.png?1551227370",
+			},
+			{
+				id: 721,
+				src: "/img/forum/emoticons/roflanLico.png"
 			}]
         },
         
@@ -401,16 +405,17 @@ const Asmund = {
 	/***  Поиск матерных слов в постах ***/
 	searchBadWords: {
 		getPosts: () => {
-			return [...document.querySelectorAll('.message-list .messageContent .messageText.baseHtml p')];
+			return [...document.querySelectorAll('.message-list p')];
 		},
 
 		init: function () {
 			var posts = this.getPosts();
-			var words = ["del", "/дел", "хер", "сука", "суки", "сукам", "пиздец", "хуй", "еба", "нахуй", "*", "блять", "блядь"];
+			var words = ["del", "/дел", "хер", "сука", "суки", "сукам", "пиздец", "хуй", "еба", "нахуй", "*", "блять", "блядь", "#"];
 			for (el of posts) {
 				for (elem of words) {
 					if (el.innerHTML.toLowerCase().indexOf(elem) != -1) {
 						el.style = "background: #f1c40f; color: #000000"; //желтый: #f1c40f зелёный: #78cc66
+						el.innerHTML = el.innerHTML.replace(elem, `<span style="background: #78cc66; color: #000000">${elem}</span>`);
 					}
 				}
 			}
@@ -420,7 +425,7 @@ const Asmund = {
 
 
 	/***  Поиск матерных слов в постах ***/
-	/*searchBadWords: {
+	searchBadWords2: {
 		// Список trigger слов
         trigger: ['del', 'дел', 'хер', 'хуй', 'пизд', 'нах', 'уеб', 'сук'],
        
@@ -431,7 +436,7 @@ const Asmund = {
             //'padding: 1px 4px',
 			//'margin: -2px -5px'
 
-			'background: #f1c40f',
+			'background: #78cc66',
 			'color: #000000'
         ],
        
@@ -521,7 +526,7 @@ const Asmund = {
              // Инициализация рендера
             this.renderInfo.init();
         }
-    },*/
+    },
 
 
 
@@ -533,6 +538,7 @@ const Asmund = {
 		this.removeHelper.init();
 		this.favoritesEmotions.init();
 		this.searchBadWords.init();
+		//this.searchBadWords2.init();
     }
 }
 
