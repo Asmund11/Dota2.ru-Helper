@@ -5,9 +5,9 @@ const Asmund = {
 	highlight: {
 		 /*** Список категорий для групп пользователей ***/
 		modGroupList: {
-			"Модератор других игр, CS:GO и разного": ["Другие игры", "Counter-Strike: Global Offensive", "Разное"],
+			"Модератор основного раздела": ["Основной раздел", "Counter-Strike: Global Offensive"],
 			"Модератор технического раздела": ["Технический раздел"],
-			"Модератор основного раздела": ["Основной раздел"]
+			"Модератор других игр и разного": ["Другие игры", "Разное"]
 		},
 
 		 /*** Список форумов в категориях ***/
@@ -100,6 +100,40 @@ const Asmund = {
 				}
 			}).filter(d => d.quoteInf.length > 0 && d.smiles.length > 0); // И фильтруем от "пустых" ячеек
 		},
+
+		// Все посты без цитат
+		getInfEmptyPosts: () => {
+			// Получаем все посты
+			return [...document.querySelectorAll('.message-list > li')].map(el => {
+					return {
+							// Запоминаем DOM и ID поста
+						postInf: {
+							post: el,
+							pid: el.dataset.id
+						},
+							// Получаем все цитаты в посте (ник и id цитируемых)
+						quoteInf: [...el.querySelectorAll('.bbCodeQuote')].map(a => {
+							return {
+								name: a.dataset.author,
+								uid: a.dataset.userId
+							}
+						}),
+							// Получаем все лайки под постом (количество, id и названия смайлов)
+						smiles: [...el.querySelectorAll('.post-smiles-content a:not(.rate-btn-plus)')].map(b => {
+							return {
+								count: b.dataset.smileCount,
+								sid: b.dataset.smileId,
+								title: b.querySelector('img').getAttribute('title'),
+								image: b.querySelector('img').getAttribute('src')
+							}
+						}).filter(c => c.count > 0) // Избавляемся от "пустых" смайлов
+					}
+			}).filter(d => d.quoteInf.length == 0 && d.smiles.length > 0); // И фильтруем от "пустых" ячеек и постов с цитатами
+	   },
+
+	   getTopicStarter: () => {
+			return [document.querySelector('.muted.page-description .username').innerHTML]
+	   },
 		
 		 /*** Получаем список пользователей, оценивших пост ***/
 		getUsers: (pid, sid) => {
@@ -153,6 +187,40 @@ const Asmund = {
 			
 			return result;
 		},
+
+		// Нахожу смайл автора темы под сообщением без цитаты
+		getAuthorsSmile: async function () {
+			let info = this.getInfEmptyPosts(), result2 = [];
+			var ts = this.getTopicStarter(); // Автор темы
+			for (item of info) {
+				for (smile of item.smiles) {
+					let p = item.postInf, s = smile;
+					
+					let res = await this.getUsers(p.pid, s.sid).then(response => {
+						// Собираю ники
+						let nicks = response.map(a => a['user.username']);
+
+						for (nick of nicks) {
+							if (nick.indexOf(ts) !== ~false) {
+								result2.push({
+									post: {
+										dom: p.post, // DOM поста
+										id: p.pid // ID поста
+									},
+									smile: {
+										title: s.title, // Имя смайла-оценки
+										id: s.sid, // ID смайла-оценки
+										image: s.image //Картинка смайла
+									}
+								});
+							}
+						}
+					})
+				}
+			}
+			
+			return result2;
+		},
 		
 		 /*** Отрисовка результата ***/
 		render: (post, name, smile) => {
@@ -171,124 +239,146 @@ const Asmund = {
 		 /*** Инициализация emotions ***/
 		init: async function () {
 			let result = [],
-				list = await this.getQuoteRatedUsers().then(e => {
-					result = e; // Для твоего удобства вывел из promise в синхрон
-				});
+			list = await this.getQuoteRatedUsers().then(e => {
+				result = e; // Для твоего удобства вывел из promise в синхрон
+			});
+
+			let result2 = [],
+			list2 = await this.getAuthorsSmile().then(a => {
+				result2 = a;
+			});
 			
 			//console.log(result);
 			
 			for (i of result)
 				this.render (i.post.dom, i.user.name, i.smile.image);
-		}
-	},
 
-
-	emotions_ts: {
-		getInf: () => {
-			return [...document.querySelectorAll('.message-list > li')].map(el => {
-				return {
-					postInf: {
-						post: el,
-						pid: el.dataset.id
-					},
-					quoteInf: [...el.querySelectorAll('.bbCodeQuote')].map(a => {
-						return {
-							name: a.dataset.author,
-							uid: a.dataset.userId
-						}
-					}),
-					smiles: [...el.querySelectorAll('.post-smiles-content a:not(.rate-btn-plus)')].map(b => {
-						return {
-							count: b.dataset.smileCount,
-							sid: b.dataset.smileId,
-							title: b.querySelector('img').getAttribute('title'),
-							image: b.querySelector('img').getAttribute('src')
-						}
-					}).filter(c => c.count > 0)
-				}
-			}).filter(d => d.quoteInf.length == 0 && d.smiles.length > 0);
-		},
-
-		getUsers: (pid, sid) => {
-			return fetch("/forum/api/forum/getUsersWhoRatePost", {
-				method: "POST",
-				headers: { "x-requested-with": "XMLHttpRequest" },
-				body: JSON.stringify({
-					"pid": pid, // ID поста
-					"smileId": sid // ID эмоции
-				})
-			}).then(r => r.json());
-		}, 
-
-		getQuoteRatedUsers: async function () {
-			let info = this.getInf(), result = [];
-			
-			 // Поэтапно отправляем полученные запросы
-			for (item of info) {
-				for (smile of item.smiles) {
-					let p = item.postInf, s = smile, q = item.quoteInf;
-					
-					 // Работаем с promise
-					let res = await this.getUsers(p.pid, s.sid).then(response => {
-						 // Из ответа нам нужны только ID, собираем их
-						let uids = response.map(a => a['user.id']);
-						
-						for (nick of q) {
-							 // Нашлось ID цитируемого - запоминаем
-							if (uids.indexOf(nick.uid) !== ~false) {
-								result.push({
-									post: {
-										dom: p.post, // DOM поста
-										id: p.pid // ID поста
-									},
-									user: {
-										name: nick.name, // Имя пользователя
-										id: nick.uid // ID пользователя
-									},
-									smile: {
-										title: s.title, // Имя смайла-оценки
-										id: s.sid, // ID смайла-оценки
-										image: s.image //Картинка смайла
-									}
-								});
-							}
-						}
-					});
-				}
-			}
-			
-			return result;
-		},
-
-		render: (post, name, smile) => {
-			let rated = post.querySelector('div[id|="post-rated-list"]');
-			
-			if (!rated.querySelector(`[data-name="${name}"]`)) {
-				let title = document.createElement('p');
-				title.style = "padding: 2px 6px; background: #363636; color: #dedede; border-radius: 3px; margin-top: 6px;";
-				title.setAttribute('data-name', name);
-				title.innerHTML = `Автор темы - <b>${name}</b> отреагировал на цитирование - <img src="${smile}">`;
-				
-				rated.append(title);
-			}
-		},
-		
-		 /*** Инициализация emotions ***/
-		init: async function () {
-			let result = [],
-				list = await this.getQuoteRatedUsers().then(e => {
-					result = e; // Для твоего удобства вывел из promise в синхрон
-				});
-			
-			//console.log(result);
-			
-			for (i of result)
-				this.render (i.post.dom, i.user.name, i.smile.image);
+			for (i of result2)
+				this.render (i.post.dom, 'Автор темы', i.smile.image);
 		}
 	},
 
 
 
+
+
+	emotions2: {
+		/*** Получаем все посты, в которых есть цитаты и эмоции под постом ***/
+	   getInf: () => {
+			// Получаем все посты
+		   return [...document.querySelectorAll('.message-list > li')].map(el => {
+			   return {
+					// Запоминаем DOM и ID поста
+				   postInf: {
+					   post: el,
+					   pid: el.dataset.id
+				   },
+					// Получаем все цитаты в посте (ник и id цитируемых)
+				   quoteInf: [...el.querySelectorAll('.bbCodeQuote')].map(a => {
+					   return {
+						   name: a.dataset.author,
+						   uid: a.dataset.userId
+					   }
+				   }),
+					// Получаем все лайки под постом (количество, id и названия смайлов)
+				   smiles: [...el.querySelectorAll('.post-smiles-content a:not(.rate-btn-plus)')].map(b => {
+					   return {
+						   count: b.dataset.smileCount,
+						   sid: b.dataset.smileId,
+						   title: b.querySelector('img').getAttribute('title'),
+						   image: b.querySelector('img').getAttribute('src')
+					   }
+				   }).filter(c => c.count > 0) // Избавляемся от "пустых" смайлов
+			   }
+		   }).filter(d => d.quoteInf.length > 0 && d.smiles.length > 0); // И фильтруем от "пустых" ячеек
+	   },
+	   
+		/*** Получаем список пользователей, оценивших пост ***/
+	   getUsers: (pid, sid) => {
+		   return fetch("/forum/api/forum/getUsersWhoRatePost", {
+			   method: "POST",
+			   headers: { "x-requested-with": "XMLHttpRequest" },
+			   body: JSON.stringify({
+				   "pid": pid, // ID поста
+				   "smileId": sid // ID эмоции
+			   })
+		   }).then(r => r.json()); // Тут допишешь проверку на 200/40*/50*, вынести в отдельную ф-ию
+	   },
+	   
+	   /*** Получить всё о пользователях, что оценили свои цитаты ***/
+	   getQuoteRatedUsers: async function () {
+		   let info = this.getInf(), result = [];
+		   
+			// Поэтапно отправляем полученные запросы
+		   for (item of info) {
+			   for (smile of item.smiles) {
+				   let p = item.postInf, s = smile, q = item.quoteInf;
+				   
+					// Работаем с promise
+				   let res = await this.getUsers(p.pid, s.sid).then(response => {
+						// Из ответа нам нужны только ID, собираем их
+					   let uids = response.map(a => a['user.id']);
+					   
+					   for (nick of q) {
+							// Нашлось ID цитируемого - запоминаем
+						   if (uids.indexOf(nick.uid) !== ~false) {
+							   result.push({
+								   post: {
+									   dom: p.post, // DOM поста
+									   id: p.pid // ID поста
+								   },
+								   user: {
+									   name: nick.name, // Имя пользователя
+									   id: nick.uid // ID пользователя
+								   },
+								   smile: {
+									   title: s.title, // Имя смайла-оценки
+									   id: s.sid, // ID смайла-оценки
+									   image: s.image //Картинка смайла
+								   }
+							   });
+						   }
+					   }
+				   });
+			   }
+		   }
+		   
+		   return result;
+	   },
+	   
+		/*** Отрисовка результата ***/
+	   render: (post, name, smile) => {
+		   let rated = post.querySelector('div[id|="post-rated-list"]');
+		   
+		   if (!rated.querySelector(`[data-name="${name}"]`)) {
+			   let title = document.createElement('p');
+			   title.style = "padding: 2px 6px; background: #363636; color: #dedede; border-radius: 3px; margin-top: 6px;";
+			   title.setAttribute('data-name', name);
+			   title.innerHTML = `<b>${name}</b> отреагировал на цитирование - <img src="${smile}">`;
+			   
+			   rated.append(title);
+		   }
+	   },
+	   
+		/*** Инициализация emotions ***/
+	   init: async function () {
+		   let result = [],
+			   list = await this.getQuoteRatedUsers().then(e => {
+				   result = e; // Для твоего удобства вывел из promise в синхрон
+			   });
+		   
+		   //console.log(result);
+		   
+		   for (i of result)
+			   this.render (i.post.dom, i.user.name, i.smile.image);
+	   }
+   },
+
+
+
+
+
+	
 	/* Подсветка цитат удалённых сообщений */
 	/*										*/
 	/************************************** */
@@ -410,10 +500,10 @@ const Asmund = {
 
 		init: function () {
 			var posts = this.getPosts();
-			var words = ["del", "/дел", "хер", "сука", "суки", "сукам", "пиздец", "хуй", "еба", "нахуй", "*", "блять", "блядь", "#"];
+			var words = ["del", "/дел", "хер", "хуй", "пизд", "нах", "уеб", "сук", "еба", "*", "#", "блять", "блядь"];
 			for (el of posts) {
 				for (elem of words) {
-					if (el.innerHTML.toLowerCase().indexOf(elem) != -1) {
+					if (el.textContent.toLowerCase().indexOf(elem) != -1) {
 						el.style = "background: #f1c40f; color: #000000"; //желтый: #f1c40f зелёный: #78cc66
 						el.innerHTML = el.innerHTML.replace(elem, `<span style="background: #78cc66; color: #000000">${elem}</span>`);
 					}
@@ -427,7 +517,7 @@ const Asmund = {
 	/***  Поиск матерных слов в постах ***/
 	searchBadWords2: {
 		// Список trigger слов
-        trigger: ['del', 'дел', 'хер', 'хуй', 'пизд', 'нах', 'уеб', 'сук'],
+		trigger: ['del(?!\\S)', 'д[еа]л[^ьеёо]?', 'хер(?!т)', 'хуй', 'пизд', 'нах(?!од|рен)', 'уеб', 'сук', 'еба(?!рд|ф)', 'бля', '\\*', '\\#(?!\\w)'],
        
          // Применяемые стили на найденные слова
         styles: [
@@ -502,7 +592,7 @@ const Asmund = {
        
          // Генератор regexp на основе trigger слов
         regexp: function () {
-            return new RegExp(`[\/]?(${this.trigger.join('|')})`, 'ig')
+            return new RegExp(`(${this.trigger.join('|')})`, 'ig')
         },
        
          // Получение всех строк
@@ -518,7 +608,8 @@ const Asmund = {
            
             for (str of strs) {
                 if (rexp.test(str.innerHTML)) {
-                    str.innerHTML = str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
+					str.innerHTML = str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
+					str.style = "background: #f1c40f; color: #000000";
                     this.renderInfo.list.push(str);
                 }
             }
@@ -534,11 +625,9 @@ const Asmund = {
     init: function () {
         this.highlight.init();
 		this.emotions.init();
-		this.emotions_ts.init();
 		this.removeHelper.init();
 		this.favoritesEmotions.init();
-		this.searchBadWords.init();
-		//this.searchBadWords2.init();
+		this.searchBadWords2.init();
     }
 }
 
