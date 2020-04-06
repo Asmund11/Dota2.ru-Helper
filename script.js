@@ -13,7 +13,7 @@ const Asmund = {
 		 /*** Список форумов в категориях ***/
 		categories: {
 			"Основной раздел": ["Общие вопросы и обсуждения", "Обитель нытья", "Dota Plus, компендиумы и ивенты", "Обновления и патчи", "Рейтинговая система и статистика", "Герои: общие обсуждения", "Dream Dota", "Нестандартные сборки", "Киберспорт: общие обсуждения", "Игроки и команды", "Турниры, матчи и прогнозы", "Поиск игроков для ммр и паб игр", "Поиск игроков для создания команды", "Поиск команды для совместных игр и участия в турнирах", "Поиск игроков для ивентов и абузов", "Обмен предметами и гифтами", "Обсуждения и цены", "Медиа Dota 2", "Стримы","Развитие портала"],
-			"Counter-Strike: Global Offensive": ["[CS:GO] Общие вопросы и обсуждения", "[CS:GO] Обновления и патчи", "[CS:GO] Киберспорт", "[CS:GO] Обменник"],
+			"Counter-Strike: Global Offensive": ["[CS:GO] Общие вопросы и обсуждения", "[CS:GO] Киберспорт"],
 			"Технический раздел": ["Техническая поддержка по Dota 2", "Железо и обсуждения", "Сборка ПК, значительный апгрейд", "Выбор комплектующих, ноутбуков, консолей", "Компьютерная помощь по остальным вопросам", "Игровые девайсы, периферия и прочая техника", "Мобильные девайсы", "Софт и прочие технические вопросы", "Steam", "Программирование"],
 			"Другие игры": ["Другие игры", "The Elder Scrolls", "Path of Exile", "Shooter, Battle Royale", "Apex Legends", "ККИ", "Hearthstone", "Artifact", "League of Legends", "MMO (RPG, FPS, RTS)", "World of Warcraft", "Dota Underlords", "Dota Auto Chess", "Консольные игры", "Мобильные игры"],
 			"Разное": ["Таверна", "Творчество", "Музыка", "Кино и сериалы", "Аниме и прочее", "Спорт", "Книги"]
@@ -43,6 +43,7 @@ const Asmund = {
 				for (cat in this.categories) {
 					if (list.indexOf(cat) !== ~false) {
 						result = result.concat(this.categories[cat]);
+						console.log(result);
 					}
 				}
 				
@@ -460,27 +461,33 @@ const Asmund = {
         },
         
         render: (dom, smile) => {
-            let a = document.createElement('a');
-			
+			let a = document.createElement('a');
             a.setAttribute('data-asmund-sid', smile.id);
 			a.setAttribute('onclick', `javascript: Topic.setPostRate(${dom.id}, ${smile.id}); return false;`);
-            a.innerHTML = `<img class="asmund-preview-smiles" src="${smile.src}">`;
-            
+			a.innerHTML = `<img class="asmund-preview-smiles" src="${smile.src}">`;
+
             dom.post.append(a);
 		},
 
-		/*addsmiles: () => {
-
+		/*addsmiles: (dom) => {
+			//a.oncontextmenu = "Topic.ratePost(23361273,this)";
+			a.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${dom.id}, ${this}); return false;`);
 		},*/
 
         init: function () {
-            let holderList = document.querySelectorAll('.message-list > li'),
-                smiles = this.getPinned();
-            
+			let holderList = document.querySelectorAll('.message-list > li'), smiles = this.getPinned();
+			/*for (holder of holderList) {
+				this.addsmiles({
+					id: holder.dataset.id
+				});
+			}*/
+			let div = document.createElement('div');
+			div.className = "fav-smiles";
+			$(".postDataHolder").append(div);
             for (holder of holderList) {
                 for (smile of smiles) {
                     this.render({
-                            post: holder.querySelector('.postDataHolder'), 
+							post: holder.querySelector('.fav-smiles'), 
                             id: holder.dataset.id
                         }, 
                         smile
@@ -492,33 +499,16 @@ const Asmund = {
 
 
 
+
+
 	/***  Поиск матерных слов в постах ***/
 	searchBadWords: {
-		getPosts: () => {
-			return [...document.querySelectorAll('.message-list p')];
-		},
-
-		init: function () {
-			var posts = this.getPosts();
-			var words = ["del", "/дел", "хер", "хуй", "пизд", "нах", "уеб", "сук", "еба", "*", "#", "блять", "блядь"];
-			for (el of posts) {
-				for (elem of words) {
-					if (el.textContent.toLowerCase().indexOf(elem) != -1) {
-						el.style = "background: #f1c40f; color: #000000"; //желтый: #f1c40f зелёный: #78cc66
-						el.innerHTML = el.innerHTML.replace(elem, `<span style="background: #78cc66; color: #000000">${elem}</span>`);
-					}
-				}
-			}
-		}
-	},
-
-
-
-	/***  Поиск матерных слов в постах ***/
-	searchBadWords2: {
 		// Список trigger слов
-		trigger: ['del(?!\\S)', 'д[еа]л[^ьеёо]?', 'хер(?!т)', 'хуй', 'пизд', 'нах(?!од|рен)', 'уеб', 'сук', 'еба(?!рд|ф)', 'бля', '\\*', '\\#(?!\\w)'],
-       
+		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ 'хер(?!т|сон|он|ыч)', 'ху[йяеёи]', 'пизд',
+		'(?<!ме|й|о|а|ми|ив|и|р|ру|оу|чу|спав)нах(?!од|рен|в|ал|ож|од|л)',
+		'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен)', 'уеб', 'сук', '(?<!м|ч|р|к|л|н|ст|ге|д)[ёе]б[ауыи](?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля[^ей]',
+		'(?<!85/100)\\*(?!\\w|не активно)', '(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'],
+
          // Применяемые стили на найденные слова
         styles: [
             //'border: 1px dashed green',
@@ -548,13 +538,13 @@ const Asmund = {
             render: function (list, site, wind) {
                 let ct = this.canvas.getContext('2d');
                
-                console.log(list);
+                //console.log(list);
                
                 for (item of list) {
                     let y = item.getClientRects()[0].top,
                         eltop = (y / site) * wind; // element top
                        
-                    console.log(y, eltop);
+                    //console.log(y, eltop);
                        
                     ct.beginPath();
                     ct.moveTo(20, eltop);
@@ -584,7 +574,7 @@ const Asmund = {
                     sp = this.fullHeight / this.divider, // site percent
                     wp = this.windowHeight / this.divider; // window percent
                    
-                console.log(list);
+                //console.log(list);
                    
                 this.render(list, sp, wp);
             }
@@ -617,7 +607,65 @@ const Asmund = {
              // Инициализация рендера
             this.renderInfo.init();
         }
-    },
+	},
+	
+
+
+	checkStream: {
+		init: function () {
+			var a = document.querySelector('.page-title.clearfix').innerHTML;
+			if (a.indexOf("стримах") !== ~false) {
+				const nicks = document.querySelectorAll('.posterDate.muted .username');
+				const Nicks = Array.from(nicks);
+
+				var i, j, k = Nicks.length;
+				for (i = 0; i < k; i++) {
+					for (j = i + 1; j < k; j++) {
+						if (Nicks[i].innerHTML == Nicks[j].innerHTML) {
+							var h = 0;
+							document.querySelectorAll('.discussionListItems li').forEach(el => {
+								if (h == i || h == j) {
+									el.style.setProperty('opacity', '0.3');
+								}
+								h++;
+							});
+						}
+					}
+				}
+			}
+		}
+	},
+
+
+
+
+	openTopics : {
+		open: function () {
+			var i = 0;
+			document.querySelectorAll('.discussionListItems .title a').forEach(el => {
+				let link = el;
+				window.open(link);
+				this.sleep(2000);
+				i++;
+				if (i == 2) {
+					throw BreakException;
+				}
+			});
+		},
+
+		sleep: function (milliseconds) {
+			var start = new Date().getTime();
+			for (var i = 0; i < 1e7; i++) {
+				if ((new Date().getTime() - start) > milliseconds) {
+					break;
+				}
+			}
+		},
+
+		init: function () {
+			this.open();
+		}
+	},
 
 
 
@@ -627,7 +675,9 @@ const Asmund = {
 		this.emotions.init();
 		this.removeHelper.init();
 		this.favoritesEmotions.init();
-		this.searchBadWords2.init();
+		this.searchBadWords.init();
+		this.checkStream.init();
+		this.openTopics.init();
     }
 }
 
