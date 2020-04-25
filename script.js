@@ -43,7 +43,7 @@ const Asmund = {
 				for (cat in this.categories) {
 					if (list.indexOf(cat) !== ~false) {
 						result = result.concat(this.categories[cat]);
-						console.log(result);
+						//console.log(result);
 					}
 				}
 				
@@ -263,122 +263,6 @@ const Asmund = {
 
 
 
-	emotions2: {
-		/*** Получаем все посты, в которых есть цитаты и эмоции под постом ***/
-	   getInf: () => {
-			// Получаем все посты
-		   return [...document.querySelectorAll('.message-list > li')].map(el => {
-			   return {
-					// Запоминаем DOM и ID поста
-				   postInf: {
-					   post: el,
-					   pid: el.dataset.id
-				   },
-					// Получаем все цитаты в посте (ник и id цитируемых)
-				   quoteInf: [...el.querySelectorAll('.bbCodeQuote')].map(a => {
-					   return {
-						   name: a.dataset.author,
-						   uid: a.dataset.userId
-					   }
-				   }),
-					// Получаем все лайки под постом (количество, id и названия смайлов)
-				   smiles: [...el.querySelectorAll('.post-smiles-content a:not(.rate-btn-plus)')].map(b => {
-					   return {
-						   count: b.dataset.smileCount,
-						   sid: b.dataset.smileId,
-						   title: b.querySelector('img').getAttribute('title'),
-						   image: b.querySelector('img').getAttribute('src')
-					   }
-				   }).filter(c => c.count > 0) // Избавляемся от "пустых" смайлов
-			   }
-		   }).filter(d => d.quoteInf.length > 0 && d.smiles.length > 0); // И фильтруем от "пустых" ячеек
-	   },
-	   
-		/*** Получаем список пользователей, оценивших пост ***/
-	   getUsers: (pid, sid) => {
-		   return fetch("/forum/api/forum/getUsersWhoRatePost", {
-			   method: "POST",
-			   headers: { "x-requested-with": "XMLHttpRequest" },
-			   body: JSON.stringify({
-				   "pid": pid, // ID поста
-				   "smileId": sid // ID эмоции
-			   })
-		   }).then(r => r.json()); // Тут допишешь проверку на 200/40*/50*, вынести в отдельную ф-ию
-	   },
-	   
-	   /*** Получить всё о пользователях, что оценили свои цитаты ***/
-	   getQuoteRatedUsers: async function () {
-		   let info = this.getInf(), result = [];
-		   
-			// Поэтапно отправляем полученные запросы
-		   for (item of info) {
-			   for (smile of item.smiles) {
-				   let p = item.postInf, s = smile, q = item.quoteInf;
-				   
-					// Работаем с promise
-				   let res = await this.getUsers(p.pid, s.sid).then(response => {
-						// Из ответа нам нужны только ID, собираем их
-					   let uids = response.map(a => a['user.id']);
-					   
-					   for (nick of q) {
-							// Нашлось ID цитируемого - запоминаем
-						   if (uids.indexOf(nick.uid) !== ~false) {
-							   result.push({
-								   post: {
-									   dom: p.post, // DOM поста
-									   id: p.pid // ID поста
-								   },
-								   user: {
-									   name: nick.name, // Имя пользователя
-									   id: nick.uid // ID пользователя
-								   },
-								   smile: {
-									   title: s.title, // Имя смайла-оценки
-									   id: s.sid, // ID смайла-оценки
-									   image: s.image //Картинка смайла
-								   }
-							   });
-						   }
-					   }
-				   });
-			   }
-		   }
-		   
-		   return result;
-	   },
-	   
-		/*** Отрисовка результата ***/
-	   render: (post, name, smile) => {
-		   let rated = post.querySelector('div[id|="post-rated-list"]');
-		   
-		   if (!rated.querySelector(`[data-name="${name}"]`)) {
-			   let title = document.createElement('p');
-			   title.style = "padding: 2px 6px; background: #363636; color: #dedede; border-radius: 3px; margin-top: 6px;";
-			   title.setAttribute('data-name', name);
-			   title.innerHTML = `<b>${name}</b> отреагировал на цитирование - <img src="${smile}">`;
-			   
-			   rated.append(title);
-		   }
-	   },
-	   
-		/*** Инициализация emotions ***/
-	   init: async function () {
-		   let result = [],
-			   list = await this.getQuoteRatedUsers().then(e => {
-				   result = e; // Для твоего удобства вывел из promise в синхрон
-			   });
-		   
-		   //console.log(result);
-		   
-		   for (i of result)
-			   this.render (i.post.dom, i.user.name, i.smile.image);
-	   }
-   },
-
-
-
-
-
 	
 	/* Подсветка цитат удалённых сообщений */
 	/*										*/
@@ -391,24 +275,31 @@ const Asmund = {
 		getRemovedIDs: (messages) => {
 			return messages.filter(a => a.classList.contains('deleted')).map(a => a.dataset.id)
 		},
+
+		appendToSessionStorage: function (name, data) {
+			var old = sessionStorage.getItem(name);
+			if (old === null) old = "";
+			sessionStorage.setItem(name, old + data);
+		},
 		
 		getQuotedIDs: function () {
 			let messages = this.getMessages(),
 				removedMessages = this.getRemovedIDs(messages),
 				result = [];
+				this.appendToSessionStorage('ids', removedMessages);
+				var cache_ids = sessionStorage.getItem('ids');
+				//console.log(cache_ids);
 		
 			for (message of messages) {
-				let quote = message.querySelector(`div.bbCodeQuote[data-post-id]`);
-				
-				if (quote !== null) {
-					let id = quote.dataset.postId;
-			
-					if (removedMessages.indexOf(id) !== ~false) {
-					/*result.push({
-						id: message.dataset.id,
-						post: message
-					});*/
-					result.push(message.dataset.id);
+				let quotes = message.querySelectorAll(`div.bbCodeQuote[data-post-id]`);
+
+				if (quotes !== null) {
+					for (el of quotes) {
+						let id = el.dataset.postId;
+
+						if (cache_ids.indexOf(id) !== ~false) {
+							result.push(message.dataset.id);
+						}
 					}
 				}
 			}
@@ -469,18 +360,24 @@ const Asmund = {
             dom.post.append(a);
 		},
 
-		/*addsmiles: (dom) => {
-			//a.oncontextmenu = "Topic.ratePost(23361273,this)";
-			a.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${dom.id}, ${this}); return false;`);
-		},*/
+		addsmiles: () => {
+			let f_post = document.querySelector('.message-list > li:not(.upPost)'); //для первого
+			let button = f_post.querySelector('.rate-btn-plus.item.control.rate-btn');
+			button.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${f_post.dataset.id},this); return false;`);
+
+			
+
+			/*let holderList = document.querySelectorAll('.message-list > li');
+			for (let holder of holderList) { //для каждого поста
+				let button = holder.querySelector('.rate-btn-plus.item.control.rate-btn');
+				if (button)
+					button.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${holder.dataset.id},this); return false;`);
+			}*/
+		},
 
         init: function () {
 			let holderList = document.querySelectorAll('.message-list > li'), smiles = this.getPinned();
-			/*for (holder of holderList) {
-				this.addsmiles({
-					id: holder.dataset.id
-				});
-			}*/
+			//this.addsmiles();
 			let div = document.createElement('div');
 			div.className = "fav-smiles";
 			$(".postDataHolder").append(div);
@@ -504,9 +401,10 @@ const Asmund = {
 	/***  Поиск матерных слов в постах ***/
 	searchBadWords: {
 		// Список trigger слов
-		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ 'хер(?!т|сон|он|ыч)', 'ху[йяеёи]', 'пизд',
-		'(?<!ме|й|о|а|ми|ив|и|р|ру|оу|чу|спав)нах(?!од|рен|в|ал|ож|од|л)',
-		'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен)', 'уеб', 'сук', '(?<!м|ч|р|к|л|н|ст|ге|д)[ёе]б[ауыи](?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля[^ей]',
+		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма)хер(?!т|сон|он|ыч)', 'ху[йяеёи]', 'пизд',
+		'(?<!ме|й|о|а|ми|ив|и|р|у|спав)нах(?!од|рен|в|ал|ож|од|л)',
+		'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен)', 'уеб', 'сук', '(?<!м|ч|р|к|л|н|ст|ге|д|с)[ёе]б[ауыи\\s](?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)',
+		'д[оа]лб[ао][её]б',
 		'(?<!85/100)\\*(?!\\w|не активно)', '(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'],
 
          // Применяемые стили на найденные слова
@@ -671,16 +569,16 @@ const Asmund = {
 
      /*** Общая инициализация компонентов ***/
     init: function () {
-        this.highlight.init();
+		this.highlight.init();
 		this.emotions.init();
 		this.removeHelper.init();
 		this.favoritesEmotions.init();
 		this.searchBadWords.init();
 		this.checkStream.init();
-		this.openTopics.init();
+		//this.openTopics.init();
     }
 }
 
 window.addEventListener('DOMContentLoaded', function() {
-    Asmund.init();
+	Asmund.init();
 })
