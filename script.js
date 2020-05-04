@@ -12,7 +12,10 @@ const Asmund = {
 
 		 /*** Список форумов в категориях ***/
 		categories: {
-			"Основной раздел": ["Общие вопросы и обсуждения", "Обитель нытья", "Dota Plus, компендиумы и ивенты", "Обновления и патчи", "Рейтинговая система и статистика", "Герои: общие обсуждения", "Dream Dota", "Нестандартные сборки", "Киберспорт: общие обсуждения", "Игроки и команды", "Турниры, матчи и прогнозы", "Поиск игроков для ммр и паб игр", "Поиск игроков для создания команды", "Поиск команды для совместных игр и участия в турнирах", "Поиск игроков для ивентов и абузов", "Обмен предметами и гифтами", "Обсуждения и цены", "Медиа Dota 2", "Стримы","Развитие портала"],
+			"Основной раздел": ["Общие вопросы и обсуждения", "Обитель нытья", "Dota Plus, компендиумы и ивенты", "Обновления и патчи", "Рейтинговая система и статистика",
+				"Герои: общие обсуждения", "Dream Dota", "Нестандартные сборки", "Киберспорт: общие обсуждения", "Игроки и команды", "Турниры, матчи и прогнозы",
+				"Поиск игроков для ммр и паб игр", "Поиск игроков для создания команды", "Поиск команды для совместных игр и участия в турнирах",
+				"Поиск игроков для ивентов и абузов", "Обмен предметами и гифтами", "Обсуждения и цены", "Медиа Dota 2", "Стримы", "Custom Hero Chuos", "Развитие портала"],
 			"Counter-Strike: Global Offensive": ["[CS:GO] Общие вопросы и обсуждения", "[CS:GO] Киберспорт"],
 			"Технический раздел": ["Техническая поддержка по Dota 2", "Железо и обсуждения", "Сборка ПК, значительный апгрейд", "Выбор комплектующих, ноутбуков, консолей", "Компьютерная помощь по остальным вопросам", "Игровые девайсы, периферия и прочая техника", "Мобильные девайсы", "Софт и прочие технические вопросы", "Steam", "Программирование"],
 			"Другие игры": ["Другие игры", "The Elder Scrolls", "Path of Exile", "Shooter, Battle Royale", "Apex Legends", "ККИ", "Hearthstone", "Artifact", "League of Legends", "MMO (RPG, FPS, RTS)", "World of Warcraft", "Dota Underlords", "Dota Auto Chess", "Консольные игры", "Мобильные игры"],
@@ -37,13 +40,13 @@ const Asmund = {
 				
 				if (list === undefined) {
 					console.log(`Пользователь ${Utils.username} не состоит ни в одной из групп модераторов разделов.\nЕго группа: ${group}.`);
-					return [];
+					return;
 				}
 
 				for (cat in this.categories) {
 					if (list.indexOf(cat) !== ~false) {
 						result = result.concat(this.categories[cat]);
-						//console.log(result);
+						console.log(result);
 					}
 				}
 				
@@ -54,6 +57,8 @@ const Asmund = {
 		 /*** Инициализация highlight ***/
 		init: function () {
 			this.getForums().then(response => {
+				if (response == null)
+					return;
 				document.querySelectorAll('.search-results-list li').forEach(el => {
 					let fold = el.querySelector('.meta a[href*="forums/"]').innerHTML;
 					console.log(fold);
@@ -239,23 +244,25 @@ const Asmund = {
 		
 		 /*** Инициализация emotions ***/
 		init: async function () {
-			let result = [],
-			list = await this.getQuoteRatedUsers().then(e => {
-				result = e; // Для твоего удобства вывел из promise в синхрон
-			});
+			if (window.location.pathname.match(/threads\//)) {
+				let result = [],
+				list = await this.getQuoteRatedUsers().then(e => {
+					result = e; // Для твоего удобства вывел из promise в синхрон
+				});
 
-			let result2 = [],
-			list2 = await this.getAuthorsSmile().then(a => {
-				result2 = a;
-			});
-			
-			//console.log(result);
-			
-			for (i of result)
-				this.render (i.post.dom, i.user.name, i.smile.image);
+				let result2 = [],
+				list2 = await this.getAuthorsSmile().then(a => {
+					result2 = a;
+				});
+				
+				//console.log(result);
+				
+				for (i of result)
+					this.render (i.post.dom, i.user.name, i.smile.image);
 
-			for (i of result2)
-				this.render (i.post.dom, 'Автор темы', i.smile.image);
+				for (i of result2)
+					this.render (i.post.dom, 'Автор темы', i.smile.image);
+			}
 		}
 	},
 
@@ -402,10 +409,10 @@ const Asmund = {
 	searchBadWords: {
 		// Список trigger слов
 		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма)хер(?!т|сон|он|ыч)', 'ху[йяеёи]', 'пизд',
-		'(?<!ме|й|о|а|ми|ив|и|р|у|спав)нах(?!од|рен|в|ал|ож|од|л)',
-		'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен)', 'уеб', 'сук', '(?<!м|ч|р|к|л|н|ст|ге|д|с)[ёе]б[ауыи\\s](?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)',
+		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон)нах(?!од|рен|в|ал|ож|од|л)',
+		'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас)', 'уеб', 'сук', '(?<!м|ч|р|к|л|н|ст|ге|д|с)[ёе]б[ауыи\\s](?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)',
 		'д[оа]лб[ао][её]б',
-		'(?<!85/100)\\*(?!\\w|не активно)', '(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'],
+		'(?<!85/100)\\*(?!\\w|не активно)', '(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'], //ебет хули невъебеный 
 
          // Применяемые стили на найденные слова
         styles: [
@@ -485,34 +492,79 @@ const Asmund = {
        
          // Получение всех строк
         getStrs: () => {
-            return [...document.querySelectorAll('#message-list p')];
+            return [...document.querySelectorAll('#message-list:not(.deleted) p')]; // посты в темах
+		},
+		
+		getStrsPremod: () => {
+            return [...document.querySelectorAll('.snippet.messageInfo.secondary-content.premoderation p')]; // премоды
         },
          
          // Инициализация модуля
         init: function () {
-            let strs = this.getStrs(),
+			let strs = this.getStrs(),
+				strsPremod = this.getStrsPremod(),
                 rexp = this.regexp(),
                 styles = this.styles.join('; ');
-           
-            for (str of strs) {
-                if (rexp.test(str.innerHTML)) {
-					str.innerHTML = str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
-					str.style = "background: #f1c40f; color: #000000";
-                    this.renderInfo.list.push(str);
-                }
-            }
-           
-             // Инициализация рендера
-            this.renderInfo.init();
+			
+			if (strs.length != 0) {
+				for (str of strs) {
+					if (rexp.test(str.innerHTML)) {
+						str.innerHTML = str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
+						str.style = "background: #f1c40f; color: #000000";
+						this.renderInfo.list.push(str);
+					}
+				}
+				this.renderInfo.init();
+			}
+			if (strsPremod.length != 0) {
+				for (str of strsPremod) {
+					if (rexp.test(str.innerHTML)) {
+						str.innerHTML = str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
+						str.style = "background: #f1c40f; color: #000000";
+						this.renderInfo.list.push(str);
+					}
+				}
+				this.renderInfo.init();
+			}
         }
 	},
 	
 
+	checkSignature: {
+		accessHeight: 225,
+
+		checkSignature_profile: function (item) {
+			if (item.clientHeight > this.accessHeight) {
+				console.log("Высота подписи:", item.clientHeight);
+				item.classList.add('user_signature_profile');
+			} else {
+				console.log("Высота подписи:", item.clientHeight);
+			}
+		},
+
+		checkSignature: function (item) {
+			if (item.clientHeight > this.accessHeight) {
+				console.log("Высота подписи:", item.clientHeight);
+				item.classList.add('user_signature');
+			}
+		},
+
+		init: function () {
+			if (window.location.pathname.match(/\/members\//)) {
+				document.querySelectorAll('blockquote.signature').forEach(a => this.checkSignature_profile(a))
+			}
+			else if (window.location.pathname.match(/\/forum\/threads\//)){
+				document.querySelectorAll('blockquote.signature').forEach(a => this.checkSignature(a))
+			}
+		}
+	},
+
+
+
 
 	checkStream: {
 		init: function () {
-			var a = document.querySelector('.page-title.clearfix').innerHTML;
-			if (a.indexOf("стримах") !== ~false) {
+			if (window.location.pathname.match(/\/forums\/strimy.20\//)) {
 				const nicks = document.querySelectorAll('.posterDate.muted .username');
 				const Nicks = Array.from(nicks);
 
@@ -537,7 +589,7 @@ const Asmund = {
 
 
 
-	openTopics : {
+	openTopics: {
 		open: function () {
 			var i = 0;
 			document.querySelectorAll('.discussionListItems .title a').forEach(el => {
@@ -564,18 +616,29 @@ const Asmund = {
 			this.open();
 		}
 	},
+	
+
+
+	test: {
+		init: function () {
+			console.log("!!!!!!!!!");
+		}
+	},
+
 
 
 
      /*** Общая инициализация компонентов ***/
     init: function () {
-		this.highlight.init();
-		this.emotions.init();
-		this.removeHelper.init();
-		this.favoritesEmotions.init();
-		this.searchBadWords.init();
-		this.checkStream.init();
-		//this.openTopics.init();
+		this.highlight.init(); // строка 5
+		this.emotions.init(); // строка 74
+		this.removeHelper.init(); // строка 270
+		this.favoritesEmotions.init(); // строка 325
+		this.searchBadWords.init(); // строка 402
+		this.checkSignature.init(); // строка 531
+		this.checkStream.init(); // строка 544
+		//this.openTopics.init(); // строка 572
+		this.test.init();
     }
 }
 
