@@ -18,6 +18,7 @@ img.asmund-preview-smiles:hover {
 
 
 
+
 /** Стиль для постов с цитатами удалённых сообщений **/
 .asmund-find:not(.deleted) {
     position: relative;
@@ -45,4 +46,32 @@ img.asmund-preview-smiles:hover {
     margin-left: 197px!important;
     border: 2px dashed #194c19;
     border-radius: 3px;
+}
+
+
+
+.user_signature:before {
+    content: 'Нарушение';
+    position: absolute;
+    color: white;
+    right: 0px;
+    margin-top: -12px;
+    padding: 4px 6px;
+    background: #FF0000;
+}
+.user_signature {
+    border: 2px dashed #FF0000!important;
+}
+
+.user_signature_profile:before {
+    content: 'Нарушение';
+    position: absolute;
+    color: white;
+    right: 10px;
+    margin-top: -12px;
+    padding: 4px 6px;
+    background: #FF0000;
+}
+.user_signature_profile {
+    border: 2px dashed #FF0000!important;
 }
