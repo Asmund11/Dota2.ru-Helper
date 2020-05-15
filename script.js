@@ -1,4 +1,4 @@
-//test
+//test test2
 const Asmund = {
 	/* Highlight - подсветка сообщений раздела модератора */
 	/*														*/
