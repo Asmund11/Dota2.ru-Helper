@@ -1,4 +1,3 @@
-//test test2
 const Asmund = {
 	/* Highlight - подсветка сообщений раздела модератора */
 	/*														*/
@@ -557,18 +556,11 @@ const Asmund = {
 		}
 	},
 
-			//if (al.getPageAll().indexOf('members') !== ~false) {
-			//document.querySelector('.active').onclick = () => {
-				//console.log("???");
-				//if (window.location.pathname.match(/\/members\//)) {
-					//document.querySelectorAll('blockquote.signature').forEach(a => this.checkSignature_profile(a))
-				//}
-			//}
+
 
 
 	checkStream: {
 		init: function () {
-			//if (al.getPageAll().indexOf('forum/forums/strimy.20/') !== ~false) {
 			if (window.location.pathname.match(/forum\/forums\/strimy\.20\//)) {
 				const nicks = document.querySelectorAll('.posterDate.muted .username');
 				const Nicks = Array.from(nicks);
@@ -654,14 +646,14 @@ const Asmund = {
 
      /*** Общая инициализация компонентов ***/
     init: function () {
-		this.highlight.init(); // строка 5
-		this.emotions.init(); // строка 74
-		this.removeHelper.init(); // строка 270
-		this.favoritesEmotions.init(); // строка 325
-		this.searchBadWords.init(); // строка 402
-		this.checkSignature.init(); // строка 531
-		this.checkStream.init(); // строка 544
-		//this.openTopics.init(); // строка 572
+		this.highlight.init();
+		this.emotions.init();
+		this.removeHelper.init();
+		this.favoritesEmotions.init();
+		this.searchBadWords.init();
+		this.checkSignature.init();
+		this.checkStream.init();
+		//this.openTopics.init();
 		this.statistics.init();
 		this.test.init();
     }
@@ -669,17 +661,11 @@ const Asmund = {
 
 let al = {
     page: null,
-    pageAll: null,
     getPage: function () {
         if (this.page !== null) return this.page;
             this.page = window.location.pathname.match(/(?<=(forum\/))(.*?)(?=\/)/ig)[0];
             return this.page !== null ? this.page : 'mainPage'
     },
-    getPageAll: function () {
-            if (this.pageAll !== null) return this.pageAll;
-            this.pageAll = window.location.pathname.match(/.*/ig)[0];
-            return this.pageAll !== null ? this.pageAll : 'mainPage'
-    }
 }
 
 window.addEventListener('DOMContentLoaded', function() {
