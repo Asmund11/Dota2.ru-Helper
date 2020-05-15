@@ -24,12 +24,7 @@ const Asmund = {
 		
 		 /*** Получение группы пользователя ***/
 		loadGroupName: async () => {
-			return await fetch(`/forum/members/${Utils.user_id}/`).then(a => a.text()).then(r => { // Допишешь 200/40*/50*
-				let div = document.createElement('div');
-				div.innerHTML = r;
-
-				return div.querySelector('.group').innerHTML.trim();
-			});
+			return Utils.groupName;
 		},
 
 		 /*** Получить форумы для группы пользователя ***/
@@ -383,20 +378,22 @@ const Asmund = {
 		},
 
         init: function () {
-			let holderList = document.querySelectorAll('.message-list > li'), smiles = this.getPinned();
-			//this.addsmiles();
-			let div = document.createElement('div');
-			div.className = "fav-smiles";
-			$(".postDataHolder").append(div);
-            for (holder of holderList) {
-                for (smile of smiles) {
-                    this.render({
-							post: holder.querySelector('.fav-smiles'), 
-                            id: holder.dataset.id
-                        }, 
-                        smile
-					);
-                }
+			if (window.location.pathname.match(/forum\/threads/)) {
+				let holderList = document.querySelectorAll('.message-list > li'), smiles = this.getPinned();
+				//this.addsmiles();
+				let div = document.createElement('div');
+				div.className = "fav-smiles";
+				$(".postDataHolder").append(div);
+				for (holder of holderList) {
+					for (smile of smiles) {
+						this.render({
+								post: holder.querySelector('.fav-smiles'), 
+								id: holder.dataset.id
+							}, 
+							smile
+						);
+					}
+				}
 			}
         }
     },
@@ -408,11 +405,10 @@ const Asmund = {
 	/***  Поиск матерных слов в постах ***/
 	searchBadWords: {
 		// Список trigger слов
-		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма)хер(?!т|сон|он|ыч)', 'ху[йяеёи]', 'пизд',
-		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон)нах(?!од|рен|в|ал|ож|од|л)',
-		'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас)', 'уеб', 'сук', '(?<!м|ч|р|к|л|н|ст|ге|д|с)[ёе]б[ауыи\\s](?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)',
-		'д[оа]лб[ао][её]б',
-		'(?<!85/100)\\*(?!\\w|не активно)', '(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'], //ебет хули невъебеный 
+		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', 'ху[йяеёил](?!иган|ьн)', 'хули', 'пизд',
+		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон)нах(?!од|рен|в|ал|ож|од|л)', 'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'уеб', 'сук',
+		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)', 'д[оа]лб[ао][её]б', '(?<!85/100)\\*(?!\\w|не активно)',
+		'(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'], //
 
          // Применяемые стили на найденные слова
         styles: [
@@ -533,6 +529,13 @@ const Asmund = {
 	checkSignature: {
 		accessHeight: 225,
 
+		checkSignature: function (item) {
+			if (item.clientHeight > this.accessHeight) {
+				console.log("Высота подписи:", item.clientHeight);
+				item.classList.add('user_signature');
+			}
+		},
+
 		checkSignature_profile: function (item) {
 			if (item.clientHeight > this.accessHeight) {
 				console.log("Высота подписи:", item.clientHeight);
@@ -542,29 +545,30 @@ const Asmund = {
 			}
 		},
 
-		checkSignature: function (item) {
-			if (item.clientHeight > this.accessHeight) {
-				console.log("Высота подписи:", item.clientHeight);
-				item.classList.add('user_signature');
-			}
-		},
-
 		init: function () {
+			if (window.location.pathname.match(/forum\/threads\//)) {
+				document.querySelectorAll('blockquote.signature').forEach(a => this.checkSignature(a))
+				return;
+			}
 			if (window.location.pathname.match(/\/members\//)) {
 				document.querySelectorAll('blockquote.signature').forEach(a => this.checkSignature_profile(a))
-			}
-			else if (window.location.pathname.match(/\/forum\/threads\//)){
-				document.querySelectorAll('blockquote.signature').forEach(a => this.checkSignature(a))
 			}
 		}
 	},
 
-
+			//if (al.getPageAll().indexOf('members') !== ~false) {
+			//document.querySelector('.active').onclick = () => {
+				//console.log("???");
+				//if (window.location.pathname.match(/\/members\//)) {
+					//document.querySelectorAll('blockquote.signature').forEach(a => this.checkSignature_profile(a))
+				//}
+			//}
 
 
 	checkStream: {
 		init: function () {
-			if (window.location.pathname.match(/\/forums\/strimy.20\//)) {
+			//if (al.getPageAll().indexOf('forum/forums/strimy.20/') !== ~false) {
+			if (window.location.pathname.match(/forum\/forums\/strimy\.20\//)) {
 				const nicks = document.querySelectorAll('.posterDate.muted .username');
 				const Nicks = Array.from(nicks);
 
@@ -619,6 +623,25 @@ const Asmund = {
 	
 
 
+	statistics: {
+		addToLocalStorage: function (item) {
+			var n = localStorage.getItem(item);
+			if (n === null) n = 0;
+			n++;
+			localStorage.setItem(item, n);
+			//console.log(`${item}: ` + localStorage.forum);
+		},
+
+		init: function () {
+			/*document.querySelector('.page-title').onclick = () => {
+				this.addToLocalStorage('forum');
+			}*/
+		}
+	},
+	
+
+
+	
 	test: {
 		init: function () {
 			console.log("!!!!!!!!!");
@@ -626,7 +649,7 @@ const Asmund = {
 	},
 
 
-
+	
 
      /*** Общая инициализация компонентов ***/
     init: function () {
@@ -638,7 +661,23 @@ const Asmund = {
 		this.checkSignature.init(); // строка 531
 		this.checkStream.init(); // строка 544
 		//this.openTopics.init(); // строка 572
+		this.statistics.init();
 		this.test.init();
+    }
+}
+
+let al = {
+    page: null,
+    pageAll: null,
+    getPage: function () {
+        if (this.page !== null) return this.page;
+            this.page = window.location.pathname.match(/(?<=(forum\/))(.*?)(?=\/)/ig)[0];
+            return this.page !== null ? this.page : 'mainPage'
+    },
+    getPageAll: function () {
+            if (this.pageAll !== null) return this.pageAll;
+            this.pageAll = window.location.pathname.match(/.*/ig)[0];
+            return this.pageAll !== null ? this.pageAll : 'mainPage'
     }
 }
 
