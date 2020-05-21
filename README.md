@@ -9,3 +9,5 @@
 
 То же самое работает с сообщениями в премодерации:
 ![alt tag](https://i.imgur.com/DME1kxf.png)
+
+//![alt tag](https://i.imgur.com/GW8ksmf.png)
