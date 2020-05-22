@@ -406,8 +406,8 @@ const Asmund = {
 	searchBadWords: {
 		// Список trigger слов
 		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', 'ху[йяеёил](?!иган|ьн)', 'хули', 'пизд',
-		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон)нах(?!од|рен|в|ал|ож|од|л)', 'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'уеб', 'сук',
-		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)', 'д[оа]лб[ао][её]б', '(?<!85/100)\\*(?!\\w|не активно)',
+		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон)нах(?!од|рен|в|ал|ож|од|л)', '(?<!)пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'уеб', 'сук',
+		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)', 'д[оа]лб[ао][её]б', '(?<!85/100)\\*(?!\\w|не активно)',
 		'(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'], //
 
          // Применяемые стили на найденные слова
@@ -631,6 +631,51 @@ const Asmund = {
 			}*/
 		}
 	},
+
+
+
+
+	dislikes: {
+		addToSessionStorage: function (item) {
+			var n = sessionStorage.getItem(item);
+			if (n === null) n = 0;
+			n++;
+			sessionStorage.setItem(item, n);
+			//console.log('Поставил дизрапторов ' + `${item}: ` + n);
+		},
+
+		console_log: function (nicks) {
+			for (nick of nicks) {
+				console.log('Поставил ' + sessionStorage.getItem(nick) + ' дизрапторов ' + `${nick}`);
+			}
+		},
+
+		count: function () {
+			let array = [];
+			document.querySelectorAll('.stream-item').forEach(el => {
+				var a = el.querySelector('.list-inline.stream-meta.muted').innerHTML;
+				if (a.indexOf("Dislike.png") !== ~false) {
+					var b = el.querySelector('.user-photo.user-photo-mini').innerHTML;
+					var nick = b.match(/(?<=alt=").*(?=">)/);
+					if (array.includes(nick[0])) {
+						;
+					} else {
+						//console.log(nick);
+						array.push(nick[0]);
+					}
+					this.addToSessionStorage(`${nick}`);
+				}
+			});
+			console.log(array);
+			this.console_log(array);
+		},
+
+		init: function () {
+			if (window.location.pathname.match(/forum\/members\/.*\/likes\/my-rate/)) {
+				this.count();
+			}
+		}
+	},
 	
 
 
@@ -655,6 +700,7 @@ const Asmund = {
 		this.checkStream.init();
 		//this.openTopics.init();
 		this.statistics.init();
+		this.dislikes.init();
 		this.test.init();
     }
 }
