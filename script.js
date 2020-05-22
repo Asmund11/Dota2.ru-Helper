@@ -641,7 +641,7 @@ const Asmund = {
 			if (n === null) n = 0;
 			n++;
 			sessionStorage.setItem(item, n);
-			//console.log('Поставил дизрапторов ' + `${item}: ` + n);
+			//console.log('Поставил дизрапторов ' + `${item}: ` + n); 
 		},
 
 		console_log: function (nicks) {
