@@ -38,7 +38,7 @@ const Asmund = {
 					return;
 				}
 
-				for (cat in this.categories) {
+				for (let cat in this.categories) {
 					if (list.indexOf(cat) !== ~false) {
 						result = result.concat(this.categories[cat]);
 						console.log(result);
@@ -113,7 +113,7 @@ const Asmund = {
 							pid: el.dataset.id
 						},
 							// Получаем все цитаты в посте (ник и id цитируемых)
-						quoteInf: [...el.querySelectorAll('.bbCodeQuote')].map(a => {
+						quoteInf: [...el.querySelectorAll('.bbCodeQuote:not(.signature)')].map(a => {
 							return {
 								name: a.dataset.author,
 								uid: a.dataset.userId
@@ -134,7 +134,11 @@ const Asmund = {
 
 	   getTopicStarter: () => {
 			//return [document.querySelector('.muted.page-description .username').innerHTML]
-			return [Topic.user_id]
+			return Topic.user_id;
+	   },
+
+	   getMyId: () => {
+		   return Utils.user_id;
 	   },
 		
 		 /*** Получаем список пользователей, оценивших пост ***/
@@ -153,17 +157,17 @@ const Asmund = {
 		getQuoteRatedUsers: async function () {
 			let info = this.getInf(), result = [];
 			
-			 // Поэтапно отправляем полученные запросы
-			for (item of info) {
-				for (smile of item.smiles) {
+			// Поэтапно отправляем полученные запросы
+			for (let item of info) {
+				for (let smile of item.smiles) {
 					let p = item.postInf, s = smile, q = item.quoteInf;
 					
-					 // Работаем с promise
+					// Работаем с promise
 					let res = await this.getUsers(p.pid, s.sid).then(response => {
 						 // Из ответа нам нужны только ID, собираем их
 						let uids = response.map(a => a['user.id']);
 						
-						for (nick of q) {
+						for (let nick of q) {
 							 // Нашлось ID цитируемого - запоминаем
 							if (uids.indexOf(nick.uid) !== ~false) {
 								result.push({
@@ -193,9 +197,9 @@ const Asmund = {
 		// Нахожу смайл автора темы под сообщением без цитаты
 		getAuthorsSmile: async function () {
 			let info = this.getInfEmptyPosts(), result2 = [];
-			var ts = this.getTopicStarter(); // Автор темы
-			for (item of info) {
-				for (smile of item.smiles) {
+			let ts = this.getTopicStarter(); // Автор темы
+			for (let item of info) {
+				for (let smile of item.smiles) {
 					let p = item.postInf, s = smile;
 					
 					let res = await this.getUsers(p.pid, s.sid).then(response => {
@@ -203,7 +207,7 @@ const Asmund = {
 						//let nicks = response.map(a => a['user.username']);
 						let nicks = response.map(a => a['user.id']);
 
-						for (nick of nicks) {
+						for (let nick of nicks) {
 							if (nick.indexOf(ts) !== ~false) {
 								result2.push({
 									post: {
@@ -246,19 +250,20 @@ const Asmund = {
 				list = await this.getQuoteRatedUsers().then(e => {
 					result = e; // Для твоего удобства вывел из promise в синхрон
 				});
-
-				let result2 = [],
-				list2 = await this.getAuthorsSmile().then(a => {
-					result2 = a;
-				});
-				
-				//console.log(result);
-				
-				for (i of result)
+				for (let i of result) {
 					this.render (i.post.dom, i.user.name, i.smile.image);
+				}
 
-				for (i of result2)
-					this.render (i.post.dom, 'Автор темы', i.smile.image);
+				if (this.getTopicStarter() != this.getMyId()) {
+					let result2 = [],
+					list2 = await this.getAuthorsSmile().then(a => {
+						result2 = a;
+					});
+
+					for (let i of result2) {
+						this.render (i.post.dom, 'Автор темы', i.smile.image);
+					}
+				}
 			}
 		}
 	},
@@ -281,7 +286,7 @@ const Asmund = {
 		},
 
 		appendToSessionStorage: function (name, data) {
-			var old = sessionStorage.getItem(name);
+			let old = sessionStorage.getItem(name);
 			if (old === null) old = "";
 			sessionStorage.setItem(name, old + data);
 		},
@@ -291,14 +296,14 @@ const Asmund = {
 				removedMessages = this.getRemovedIDs(messages),
 				result = [];
 				this.appendToSessionStorage('ids', removedMessages);
-				var cache_ids = sessionStorage.getItem('ids');
+				let cache_ids = sessionStorage.getItem('ids');
 				//console.log(cache_ids);
 		
-			for (message of messages) {
+			for (let message of messages) {
 				let quotes = message.querySelectorAll(`div.bbCodeQuote[data-post-id]`);
 
 				if (quotes !== null) {
-					for (el of quotes) {
+					for (let el of quotes) {
 						let id = el.dataset.postId;
 
 						if (cache_ids.indexOf(id) !== ~false) {
@@ -313,7 +318,7 @@ const Asmund = {
 		
 		init: function () {
 			let posts = this.getQuotedIDs();
-			for (el of posts) {
+			for (let el of posts) {
 				let elem = document.getElementById(`post-${el}`);
 				elem.classList.add('asmund-find');
 			}
@@ -329,13 +334,13 @@ const Asmund = {
 	favoritesEmotions: {
         getPinned: () => {
             let pinned = localStorage.getItem('asmund-pinned-emotions');
-            return pinned !== null ? JSON.parse(pinned) : [{
+			return pinned !== null ? JSON.parse(pinned) : [{
                 id: 1033, 
 				src: "/img/forum/emoticons/FeelsClownMan.png?1552738440",
 			},
 			{
-				id: 370, 
-				src: "/img/forum/emoticons/navi.png?1566518543",
+				id: 1354,
+				src: "/img/forum/emoticons/NV.png?1592285569",
 			},
 			{
 				id: 1053, 
@@ -353,7 +358,21 @@ const Asmund = {
 				id: 721,
 				src: "/img/forum/emoticons/roflanLico.png"
 			}]
-        },
+		},
+		
+		addToLocalStorage: (item) => {
+			let n = localStorage.getItem('asmund-pinned-emotions');
+			if (n == null) {
+				localStorage.setItem('asmund-pinned-emotions', '[' + item + ']');
+			} else {
+				let n = localStorage.getItem('asmund-pinned-emotions');
+				localStorage.setItem('asmund-pinned-emotions', n.slice(0, -1) + ',' + item + ']');
+			}
+		},
+
+		deleteFromLocalStorage: function (item) {
+			localStorage.removeItem('asmund-pinned-emotions');
+		},
         
         render: (dom, smile) => {
 			let a = document.createElement('a');
@@ -364,12 +383,10 @@ const Asmund = {
             dom.post.append(a);
 		},
 
-		addsmiles: () => {
-			let f_post = document.querySelector('.message-list > li:not(.upPost)'); //для первого
+		addsmiles: function () {
+			/*let f_post = document.querySelector('.message-list > li:not(.upPost)'); //для первого
 			let button = f_post.querySelector('.rate-btn-plus.item.control.rate-btn');
-			button.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${f_post.dataset.id},this); return false;`);
-
-			
+			button.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${f_post.dataset.id},this); return false;`);*/
 
 			/*let holderList = document.querySelectorAll('.message-list > li');
 			for (let holder of holderList) { //для каждого поста
@@ -377,23 +394,39 @@ const Asmund = {
 				if (button)
 					button.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${holder.dataset.id},this); return false;`);
 			}*/
+			let f_post = document.querySelector('.message-list > li:not(.upPost)');
+			let button = f_post.querySelector('.rate-btn-plus.item.control.rate-btn');
+			let list;
+			button.addEventListener("click", list = document.querySelectorAll('.tab_panel'));
+			for (let n of list) {
+				n.setAttribute('oncontextmenu', console.log("~~~~~~~~"));
+			}
+
+			let smile = {
+				id: 721,
+				src: "/img/forum/emoticons/roflanLico.png"
+			}
+			let json = JSON.stringify(smile);
+			this.addToLocalStorage(json);
 		},
 
         init: function () {
 			if (window.location.pathname.match(/forum\/threads/)) {
-				let holderList = document.querySelectorAll('.message-list > li'), smiles = this.getPinned();
 				//this.addsmiles();
+				let holderList = document.querySelectorAll('.message-list > li:not(.upPost)'), smiles = this.getPinned();
 				let div = document.createElement('div');
 				div.className = "fav-smiles";
 				$(".postDataHolder").append(div);
-				for (holder of holderList) {
-					for (smile of smiles) {
-						this.render({
-								post: holder.querySelector('.fav-smiles'), 
-								id: holder.dataset.id
-							}, 
-							smile
-						);
+				for (let holder of holderList) {
+					if (holder.dataset.userId != Utils.user_id) {
+						for (let smile of smiles) {
+							this.render({
+									post: holder.querySelector('.fav-smiles'), 
+									id: holder.dataset.id
+								}, 
+								smile
+							);
+						}
 					}
 				}
 			}
@@ -407,7 +440,7 @@ const Asmund = {
 	/***  Поиск матерных слов в постах ***/
 	searchBadWords: {
 		// Список trigger слов
-		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', 'ху[йяеёил](?!иган|ьн)', 'пизд',
+		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', '(?<!потра)ху[йяеёил](?!иган|ьн)', 'пизд',
 		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон)нах(?!од|рен|в|ал|ож|од|л)', '(?<!)пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'уеб', 'сук(?!куб)',
 		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)', 'д[оа]лб[ао][её]б', '(?<!85/100)\\*(?!\\w|не активно)',
 		'(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'], //
@@ -441,13 +474,12 @@ const Asmund = {
             render: function (list, site, wind) {
                 let ct = this.canvas.getContext('2d');
                
-                //console.log(list);
-               
-                for (item of list) {
-                    let y = item.getClientRects()[0].top,
-                        eltop = (y / site) * wind; // element top
+				console.log("Сайт: " + site + " Окно: " + wind);
+                for (let item of list) {
+					//console.log(item);
+					let y = item.getClientRects()[0].top, eltop = (y / site) * wind; // element top
                        
-                    //console.log(y, eltop);
+                    console.log(y, eltop);
                        
                     ct.beginPath();
                     ct.moveTo(20, eltop);
@@ -477,7 +509,6 @@ const Asmund = {
                     sp = this.fullHeight / this.divider, // site percent
                     wp = this.windowHeight / this.divider; // window percent
                    
-                //console.log(list);
                    
                 this.render(list, sp, wp);
             }
@@ -490,7 +521,7 @@ const Asmund = {
        
          // Получение всех строк
         getStrs: () => {
-            return [...document.querySelectorAll('#message-list:not(.deleted) p')]; // посты в темах
+			return [...document.querySelectorAll('.message.staff')]; // посты
 		},
 		
 		getStrsPremod: () => {
@@ -503,19 +534,23 @@ const Asmund = {
 				strsPremod = this.getStrsPremod(),
                 rexp = this.regexp(),
                 styles = this.styles.join('; ');
-			
 			if (strs.length != 0) {
-				for (str of strs) {
-					if (rexp.test(str.innerHTML)) {
-						str.innerHTML = str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
-						str.style = "background: #f1c40f; color: #000000";
-						this.renderInfo.list.push(str);
+				for (let str of strs) {
+					let _str = str.querySelectorAll('.messageText.baseHtml:not(.signature) p');
+					for (let __str of _str) {
+						if (rexp.test(__str.innerHTML)) {
+							__str.innerHTML = __str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
+							__str.style = "background: #f1c40f; color: #000000";
+							if (str.classList.contains("deleted") == false) {
+								this.renderInfo.list.push(__str);
+							}
+						}
 					}
 				}
 				this.renderInfo.init();
 			}
 			if (strsPremod.length != 0) {
-				for (str of strsPremod) {
+				for (let str of strsPremod) {
 					if (rexp.test(str.innerHTML)) {
 						str.innerHTML = str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
 						str.style = "background: #f1c40f; color: #000000";
@@ -528,6 +563,9 @@ const Asmund = {
 	},
 	
 
+
+
+	/** Проверка подписей **/
 	checkSignature: {
 		accessHeight: 225,
 
@@ -561,17 +599,18 @@ const Asmund = {
 
 
 
+	/** Проверка на две темы с Стримах **/
 	checkStream: {
 		init: function () {
 			if (window.location.pathname.match(/forum\/forums\/strimy\.20\//)) {
 				const nicks = document.querySelectorAll('.posterDate.muted .username');
 				const Nicks = Array.from(nicks);
 
-				var i, j, k = Nicks.length;
+				let i, j, k = Nicks.length;
 				for (i = 0; i < k; i++) {
 					for (j = i + 1; j < k; j++) {
 						if (Nicks[i].innerHTML == Nicks[j].innerHTML) {
-							var h = 0;
+							let h = 0;
 							document.querySelectorAll('.discussionListItems li').forEach(el => {
 								if (h == i || h == j) {
 									el.style.setProperty('opacity', '0.3');
@@ -590,7 +629,7 @@ const Asmund = {
 
 	openTopics: {
 		open: function () {
-			var i = 0;
+			let i = 0;
 			document.querySelectorAll('.discussionListItems .title a').forEach(el => {
 				let link = el;
 				window.open(link);
@@ -603,8 +642,8 @@ const Asmund = {
 		},
 
 		sleep: function (milliseconds) {
-			var start = new Date().getTime();
-			for (var i = 0; i < 1e7; i++) {
+			let start = new Date().getTime();
+			for (let i = 0; i < 1e7; i++) {
 				if ((new Date().getTime() - start) > milliseconds) {
 					break;
 				}
@@ -620,7 +659,7 @@ const Asmund = {
 
 	statistics: {
 		addToLocalStorage: function (item) {
-			var n = localStorage.getItem(item);
+			let n = localStorage.getItem(item);
 			if (n === null) n = 0;
 			n++;
 			localStorage.setItem(item, n);
@@ -639,7 +678,7 @@ const Asmund = {
 
 	dislikes: {
 		addToSessionStorage: function (item) {
-			var n = sessionStorage.getItem(item);
+			let n = sessionStorage.getItem(item);
 			if (n === null) n = 0;
 			n++;
 			sessionStorage.setItem(item, n);
@@ -647,7 +686,7 @@ const Asmund = {
 		},
 
 		console_log: function (nicks) {
-			for (nick of nicks) {
+			for (let nick of nicks) {
 				console.log('Поставил ' + sessionStorage.getItem(nick) + ' дизрапторов ' + `${nick}`);
 			}
 		},
@@ -655,10 +694,10 @@ const Asmund = {
 		count: function () {
 			let array = [];
 			document.querySelectorAll('.stream-item').forEach(el => {
-				var a = el.querySelector('.list-inline.stream-meta.muted').innerHTML;
+				let a = el.querySelector('.list-inline.stream-meta.muted').innerHTML;
 				if (a.indexOf("Dislike.png") !== ~false) {
-					var b = el.querySelector('.user-photo.user-photo-mini').innerHTML;
-					var nick = b.match(/(?<=alt=").*(?=">)/);
+					let b = el.querySelector('.user-photo.user-photo-mini').innerHTML;
+					let nick = b.match(/(?<=alt=").*(?=">)/);
 					if (array.includes(nick[0])) {
 						;
 					} else {
