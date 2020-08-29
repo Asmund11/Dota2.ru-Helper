@@ -131,15 +131,6 @@ const Asmund = {
 					}
 			}).filter(d => d.quoteInf.length == 0 && d.smiles.length > 0); // И фильтруем от "пустых" ячеек и постов с цитатами
 	   },
-
-	   getTopicStarter: () => {
-			//return [document.querySelector('.muted.page-description .username').innerHTML]
-			return Topic.user_id;
-	   },
-
-	   getMyId: () => {
-		   return Utils.user_id;
-	   },
 		
 		 /*** Получаем список пользователей, оценивших пост ***/
 		getUsers: (pid, sid) => {
@@ -197,16 +188,14 @@ const Asmund = {
 		// Нахожу смайл автора темы под сообщением без цитаты
 		getAuthorsSmile: async function () {
 			let info = this.getInfEmptyPosts(), result2 = [];
-			let ts = this.getTopicStarter(); // Автор темы
+			let ts = Topic.user_id;
 			for (let item of info) {
 				for (let smile of item.smiles) {
 					let p = item.postInf, s = smile;
 					
 					let res = await this.getUsers(p.pid, s.sid).then(response => {
-						// Собираю ники
-						//let nicks = response.map(a => a['user.username']);
+						// Собираю id
 						let nicks = response.map(a => a['user.id']);
-
 						for (let nick of nicks) {
 							if (nick.indexOf(ts) !== ~false) {
 								result2.push({
@@ -254,7 +243,7 @@ const Asmund = {
 					this.render (i.post.dom, i.user.name, i.smile.image);
 				}
 
-				if (this.getTopicStarter() != this.getMyId()) {
+				if (Topic.user_id != Utils.user_id) {
 					let result2 = [],
 					list2 = await this.getAuthorsSmile().then(a => {
 						result2 = a;
@@ -440,8 +429,8 @@ const Asmund = {
 	/***  Поиск матерных слов в постах ***/
 	searchBadWords: {
 		// Список trigger слов
-		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', '(?<!потра)ху[йяеёил](?!иган|ьн)', 'пизд',
-		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон)нах(?!од|рен|в|ал|ож|од|л)', '(?<!)пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'уеб', 'сук(?!куб)',
+		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', '(?<!тра)ху[йяеёил](?!иган|ьн)', 'пизд',
+		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон)нах(?!од|рен|в|ал|ож|од|л)', '(?<!)пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'у[её]б', 'сук(?!куб)',
 		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)', 'д[оа]лб[ао][её]б', '(?<!85/100)\\*(?!\\w|не активно)',
 		'(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'], //
 
@@ -497,8 +486,16 @@ const Asmund = {
             },
            
             init: function () {
-                this.windowHeight = window.innerHeight;
-                this.fullHeight = document.querySelector('body').offsetHeight;
+				this.fullHeight = document.querySelector('body').offsetHeight;
+				/*this.fullHeight = Math.max(
+					document.body.scrollHeight, document.documentElement.scrollHeight,
+					document.body.offsetHeight, document.documentElement.offsetHeight,
+					document.body.clientHeight, document.documentElement.clientHeight
+				);*/
+				this.windowHeight = window.innerHeight;
+				//this.windowHeight = document.documentElement.clientHeight;
+				console.log(this.fullHeight);
+				console.log(this.windowHeight);
                
                 this.canvas = document.createElement('canvas');
                 this.canvas.style = 'position: fixed; right: 0; top: 0; width: 20px; height: 100%';
