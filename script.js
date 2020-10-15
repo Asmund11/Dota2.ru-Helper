@@ -17,8 +17,11 @@ const Asmund = {
 				"Поиск игроков для ммр и паб игр", "Поиск игроков для создания команды", "Поиск команды для совместных игр и участия в турнирах",
 				"Поиск игроков для ивентов и абузов", "Обмен предметами и гифтами", "Обсуждения и цены", "Медиа Dota 2", "Стримы", "Custom Hero Chuos", "Развитие портала"],
 			"Counter-Strike: Global Offensive": ["[CS:GO] Общие вопросы и обсуждения", "[CS:GO] Киберспорт"],
-			"Технический раздел": ["Техническая поддержка по Dota 2", "Железо и обсуждения", "Сборка ПК, значительный апгрейд", "Выбор комплектующих, ноутбуков, консолей", "Компьютерная помощь по остальным вопросам", "Игровые девайсы, периферия и прочая техника", "Мобильные девайсы", "Софт и прочие технические вопросы", "Steam", "Программирование"],
-			"Другие игры": ["Другие игры", "The Elder Scrolls", "Path of Exile", "Shooter, Battle Royale", "Apex Legends", "ККИ", "Hearthstone", "Artifact", "League of Legends", "MMO (RPG, FPS, RTS)", "World of Warcraft", "Dota Underlords", "Dota Auto Chess", "Консольные игры", "Мобильные игры"],
+			"Технический раздел": ["Техническая поддержка по Dota 2", "Железо и обсуждения", "Сборка ПК, значительный апгрейд", "Выбор комплектующих, ноутбуков, консолей",
+				"Компьютерная помощь по остальным вопросам", "Игровые девайсы, периферия и прочая техника", "Мобильные девайсы", "Софт и прочие технические вопросы", "Steam",
+				"Программирование"],
+			"Другие игры": ["Другие игры", "The Elder Scrolls", "Path of Exile", "Shooter, Battle Royale", "Apex Legends", "ККИ", "Hearthstone", "Artifact",
+			"League of Legends", "MMO (RPG, FPS, RTS)", "World of Warcraft", "Dota Underlords", "Dota Auto Chess", "Консольные игры", "Мобильные игры"],
 			"Разное": ["Таверна", "Творчество", "Музыка", "Кино и сериалы", "Аниме и прочее", "Спорт", "Книги"]
 		},
 		
@@ -157,10 +160,9 @@ const Asmund = {
 					let res = await this.getUsers(p.pid, s.sid).then(response => {
 						 // Из ответа нам нужны только ID, собираем их
 						let uids = response.map(a => a['user.id']);
-						
 						for (let nick of q) {
 							 // Нашлось ID цитируемого - запоминаем
-							if (uids.indexOf(nick.uid) !== ~false) {
+							if (uids.find(i => nick.uid == i) != undefined && nick.uid != Utils.user_id) {
 								result.push({
 									post: {
 										dom: p.post, // DOM поста
@@ -189,6 +191,7 @@ const Asmund = {
 		getAuthorsSmile: async function () {
 			let info = this.getInfEmptyPosts(), result2 = [];
 			let ts = Topic.user_id;
+			console.log("id тс'а: " + ts);
 			for (let item of info) {
 				for (let smile of item.smiles) {
 					let p = item.postInf, s = smile;
@@ -197,7 +200,7 @@ const Asmund = {
 						// Собираю id
 						let nicks = response.map(a => a['user.id']);
 						for (let nick of nicks) {
-							if (nick.indexOf(ts) !== ~false) {
+							if (nick == ts) {
 								result2.push({
 									post: {
 										dom: p.post, // DOM поста
@@ -242,13 +245,13 @@ const Asmund = {
 				for (let i of result) {
 					this.render (i.post.dom, i.user.name, i.smile.image);
 				}
-
+				
 				if (Topic.user_id != Utils.user_id) {
 					let result2 = [],
 					list2 = await this.getAuthorsSmile().then(a => {
 						result2 = a;
 					});
-
+					
 					for (let i of result2) {
 						this.render (i.post.dom, 'Автор темы', i.smile.image);
 					}
@@ -324,15 +327,18 @@ const Asmund = {
         getPinned: () => {
             let pinned = localStorage.getItem('asmund-pinned-emotions');
 			return pinned !== null ? JSON.parse(pinned) : [{
-                id: 1033, 
+				//id: 1033,
+				href: "javascript:Topic.setPostRate(107081, 1033, '/img/forum/emoticons/FeelsClownMan.png?1592047348')",
 				src: "/img/forum/emoticons/FeelsClownMan.png?1552738440",
 			},
 			{
-				id: 1354,
+				//id: 1354,
+				href: "javascript:Topic.setPostRate(107081, 1354, '/img/forum/emoticons/NV.png?1592285569')",
 				src: "/img/forum/emoticons/NV.png?1592285569",
-			},
-			{
-				id: 1053, 
+			}
+			/*{
+				//id: 1053, 
+				href: "javascript:Topic.setPostRate(107081, 1053, '/img/forum/emoticons/PepeYes.png?1592048109')",
 				src: "/img/forum/emoticons/PepeYes.png?1556510258",
 			},
 			{
@@ -346,7 +352,7 @@ const Asmund = {
 			{
 				id: 721,
 				src: "/img/forum/emoticons/roflanLico.png"
-			}]
+			}*/]
 		},
 		
 		addToLocalStorage: (item) => {
@@ -365,43 +371,51 @@ const Asmund = {
         
         render: (dom, smile) => {
 			let a = document.createElement('a');
-            a.setAttribute('data-asmund-sid', smile.id);
-			a.setAttribute('onclick', `javascript: Topic.setPostRate(${dom.id}, ${smile.id}); return false;`);
+            //a.setAttribute('data-asmund-sid', smile.id);
+			//a.setAttribute('onclick', `javascript: Topic.setPostRate(${dom.id}, ${smile.id}, '${smile.src}'); return false;`);
+			a.setAttribute('onclick', `${smile.href}; return false;`);
 			a.innerHTML = `<img class="asmund-preview-smiles" src="${smile.src}">`;
 
             dom.post.append(a);
 		},
 
+		test: function () {
+			console.log("????????");
+		},
+
 		addsmiles: function () {
-			/*let f_post = document.querySelector('.message-list > li:not(.upPost)'); //для первого
-			let button = f_post.querySelector('.rate-btn-plus.item.control.rate-btn');
-			button.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${f_post.dataset.id},this); return false;`);*/
-
-			/*let holderList = document.querySelectorAll('.message-list > li');
-			for (let holder of holderList) { //для каждого поста
-				let button = holder.querySelector('.rate-btn-plus.item.control.rate-btn');
-				if (button)
-					button.setAttribute('oncontextmenu', `javascript: Topic.ratePost(${holder.dataset.id},this); return false;`);
-			}*/
 			let f_post = document.querySelector('.message-list > li:not(.upPost)');
+			let id = f_post.dataset.id;
 			let button = f_post.querySelector('.rate-btn-plus.item.control.rate-btn');
-			let list;
-			button.addEventListener("click", list = document.querySelectorAll('.tab_panel'));
-			for (let n of list) {
-				n.setAttribute('oncontextmenu', console.log("~~~~~~~~"));
-			}
-
-			let smile = {
-				id: 721,
-				src: "/img/forum/emoticons/roflanLico.png"
-			}
-			let json = JSON.stringify(smile);
-			this.addToLocalStorage(json);
+			//button.onclick = () => {
+			button.addEventListener('click', () => {
+				this.test();
+				Topic.ratePost(id,this);
+				this.test();
+				let list = document.querySelectorAll('.tab_panel div');
+				for (let n of list) {
+					n.onmousedown = function (e) {
+						if (e.shiftKey) {
+							let div = n.firstElementChild;
+							let href = div.getAttribute('href');
+							div.removeAttribute('href');
+							let img = div.firstElementChild;
+							let src = img.getAttribute('src');
+							let smile = {
+								href: href,
+								src: src
+							}
+							let json = JSON.stringify(smile);
+							this.addToLocalStorage(json);
+						}
+					}
+				}
+			});
 		},
 
         init: function () {
 			if (window.location.pathname.match(/forum\/threads/)) {
-				//this.addsmiles();
+				this.addsmiles();
 				let holderList = document.querySelectorAll('.message-list > li:not(.upPost)'), smiles = this.getPinned();
 				let div = document.createElement('div');
 				div.className = "fav-smiles";
@@ -430,8 +444,8 @@ const Asmund = {
 	searchBadWords: {
 		// Список trigger слов
 		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', '(?<!тра)ху[йяеёил](?!иган|ьн)', 'пизд',
-		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон)нах(?!од|рен|в|ал|ож|од|л)', '(?<!)пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'у[её]б', 'сук(?!куб)',
-		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)', 'д[оа]лб[ао][её]б', '(?<!85/100)\\*(?!\\w|не активно)',
+		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон|це)нах(?!од|рен|в|ал|ож|од|л)', '(?<!)пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'у[её]б', 'сук(?!куб)',
+		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш|г|щ)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)', 'д[оа]лб[ао][её]б', '(?<!85/100)\\*(?!\\w|не активно)',
 		'(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'], //
 
          // Применяемые стили на найденные слова
@@ -714,13 +728,114 @@ const Asmund = {
 			}
 		}
 	},
-	
+
+
+
+	//notification_Helper: {
+		//request: async function (url, id) {
+			/*let xhr = new XMLHttpRequest();
+			xhr.open('GET', 'https://dota2.ru/forum/posts/24556181/', true);
+			let result;
+			xhr.addEventListener('readystatechange', function() {
+				if ((xhr.readyState == 4) && (xhr.status == 200)) {
+					result = xhr.responseText;
+				}
+			});
+			xhr.send();
+			return result;*/
+			/*let response = await fetch (url);
+			let html = await response.text();
+			let temp = document.createElement('div');
+			temp.innerHTML = html;
+			let post = temp.querySelector(`#post-${id}`);
+			return {
+				smiles: [...post.querySelectorAll('.post-smiles-content a')].map(b => {
+					return {
+						count: b.dataset.smileCount,
+						sid: b.dataset.smileId,
+						title: b.querySelector('img').getAttribute('title'),
+						image: b.querySelector('img').getAttribute('src')
+					}
+				})
+			}
+		},
+
+		emotes: async function () {
+			let url = 'https://dota2.ru/forum/posts/24556181/';
+			let id = 24556181;
+			let emotes = this.request(url, id);
+			let result = [];
+			console.log(emotes);
+			let user_id = 733467;
+			class Waiter {
+			async wait() {
+			Promise.all([emotes]).then(smiles => {
+				for (let item of emotes) {
+					console.log("-----------");
+					for (let smile of item.smiles) {
+						let s = smile;
+						let res = await this.getUsers(id, s.sid).then(response => {
+							let uids = response.map(a => a['user.id']);
+							for (let nick of uids) {
+								if (nick == user_id) {
+									result.push({
+										smile: {
+											title: s.title, // Имя смайла-оценки
+											id: s.sid, // ID смайла-оценки
+											image: s.image //Картинка смайла
+										}
+									});
+								}
+							}
+						})
+					}
+				}
+			});
+		}
+			}
+			console.log(result);
+			return result;
+		},
+
+		getUsers: (pid, sid) => {
+			return fetch("/forum/api/forum/getUsersWhoRatePost", {
+				method: "POST",
+				headers: { "x-requested-with": "XMLHttpRequest" },
+				body: JSON.stringify({
+					"pid": pid, // ID поста
+					"smileId": sid // ID эмоции
+				})
+			}).then(r => r.json()); // Тут допишешь проверку на 200/40/50*, вынести в отдельную ф-ию
+		},
+
+		init: function () {
+			this.emotes();
+		}
+	},*/
 
 
 	
 	test: {
 		init: function () {
-			console.log("!!!!!!!!!");
+			console.log("Скрипт выполнился до самого конца");
+			let n = document.querySelector('.default-rate');
+			/*n.addEventListener('keydown', function (e) {
+				if (e.shiftKey) {
+					n.onclick = function (a) {
+						if (a.button == 0) {
+							//a.preventDefault();
+							console.log("~~~~~");
+							//return false;
+						}
+					}
+				}
+			});*/
+			n.onmousedown = function (e) {
+				if (e.shiftKey) {
+					n.removeAttribute('href');
+					console.log("||||||");
+				}
+			}
 		}
 	},
 
@@ -734,11 +849,12 @@ const Asmund = {
 		this.removeHelper.init();
 		this.favoritesEmotions.init();
 		this.searchBadWords.init();
-		this.checkSignature.init();
+		//this.checkSignature.init();
 		this.checkStream.init();
 		//this.openTopics.init();
 		this.statistics.init();
 		this.dislikes.init();
+		//this.notification_Helper.init();
 		this.test.init();
     }
 }
