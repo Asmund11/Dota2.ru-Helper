@@ -326,7 +326,7 @@ const Asmund = {
 	favoritesEmotions: {
         getPinned: () => {
             let pinned = localStorage.getItem('asmund-pinned-emotions');
-			return pinned !== null ? JSON.parse(pinned) : [{
+			return pinned !== null ? JSON.parse(pinned) : [/*{
 				//id: 1033,
 				href: "javascript:Topic.setPostRate(107081, 1033, '/img/forum/emoticons/FeelsClownMan.png?1592047348')",
 				src: "/img/forum/emoticons/FeelsClownMan.png?1552738440",
@@ -335,7 +335,7 @@ const Asmund = {
 				//id: 1354,
 				href: "javascript:Topic.setPostRate(107081, 1354, '/img/forum/emoticons/NV.png?1592285569')",
 				src: "/img/forum/emoticons/NV.png?1592285569",
-			}
+			}*/
 			/*{
 				//id: 1053, 
 				href: "javascript:Topic.setPostRate(107081, 1053, '/img/forum/emoticons/PepeYes.png?1592048109')",
@@ -366,17 +366,32 @@ const Asmund = {
 		},
 
 		deleteFromLocalStorage: function (item) {
-			localStorage.removeItem('asmund-pinned-emotions');
+			let n = localStorage.getItem('asmund-pinned-emotions');
+			if (n.indexOf(item + ',') !== ~false) {
+				n = n.replace(item + ',', '');
+			} else if (n.indexOf(',' + item + ']') !== ~false) {
+				n = n.replace(',' + item, '');
+			} else if (n.indexOf('[' + item + ']') !== ~false) {
+				localStorage.removeItem('asmund-pinned-emotions');
+				return;
+			}
+			localStorage.setItem('asmund-pinned-emotions', n);
 		},
         
         render: (dom, smile) => {
 			let a = document.createElement('a');
-            //a.setAttribute('data-asmund-sid', smile.id);
-			//a.setAttribute('onclick', `javascript: Topic.setPostRate(${dom.id}, ${smile.id}, '${smile.src}'); return false;`);
-			a.setAttribute('onclick', `${smile.href}; return false;`);
+			//a.setAttribute('onclick', `${smile.href}; return false;`);
+			let href = `${smile.href}`;
+			href = href.replace(/\d+/, `${dom.id}`);
+			console.log(href);
+			a.setAttribute('onclick', `${href}`);
 			a.innerHTML = `<img class="asmund-preview-smiles" src="${smile.src}">`;
 
             dom.post.append(a);
+		},
+
+		unRender: function (button) {
+			button.parentNode.removeChild(button);
 		},
 
 		test: function () {
@@ -387,11 +402,9 @@ const Asmund = {
 			let f_post = document.querySelector('.message-list > li:not(.upPost)');
 			let id = f_post.dataset.id;
 			let button = f_post.querySelector('.rate-btn-plus.item.control.rate-btn');
-			//button.onclick = () => {
-			button.addEventListener('click', () => {
-				this.test();
+			let That = this;
+			button.onclick = function () {
 				Topic.ratePost(id,this);
-				this.test();
 				let list = document.querySelectorAll('.tab_panel div');
 				for (let n of list) {
 					n.onmousedown = function (e) {
@@ -406,11 +419,39 @@ const Asmund = {
 								src: src
 							}
 							let json = JSON.stringify(smile);
-							this.addToLocalStorage(json);
+							That.addToLocalStorage(json);
+							That.render({
+								post: f_post.querySelector('.fav-smiles'), 
+								id: id
+							}, 
+							smile
+						);
 						}
 					}
 				}
-			});
+			};
+		},
+
+		deleteSmiles: function () {
+			let f_post = document.querySelector('.message-list > li:not(.upPost)');
+			let smiles = f_post.querySelectorAll('.fav-smiles a');
+			for (let button of smiles) {
+				let That = this;
+				button.onmousedown = function (e) {
+					if (e.shiftKey) {
+						let href = button.getAttribute('onclick');
+						let img = button.firstElementChild;
+						let src = img.getAttribute('src');
+						let smile = {
+							href: href,
+							src: src
+						}
+						let json = JSON.stringify(smile);
+						That.deleteFromLocalStorage(json);
+						That.unRender(button);
+					}
+				}
+			}
 		},
 
         init: function () {
@@ -432,6 +473,7 @@ const Asmund = {
 						}
 					}
 				}
+				this.deleteSmiles();
 			}
         }
     },
