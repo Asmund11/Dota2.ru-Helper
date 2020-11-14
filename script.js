@@ -74,25 +74,21 @@ const Asmund = {
 	/* Emotions - определение оценки автора цитируемого поста */
 	/*														  */
 	/**********************************************************/
-	emotions: {
-		 /*** Получаем все посты, в которых есть цитаты и эмоции под постом ***/
+	quote_emotions: {
+		// Все посты с цитатами и смайлами
 		getInf: () => {
-			 // Получаем все посты
 			return [...document.querySelectorAll('.message-list > li')].map(el => {
 				return {
-					 // Запоминаем DOM и ID поста
 					postInf: {
 						post: el,
 						pid: el.dataset.id
 					},
-					 // Получаем все цитаты в посте (ник и id цитируемых)
 					quoteInf: [...el.querySelectorAll('.bbCodeQuote')].map(a => {
 						return {
 							name: a.dataset.author,
 							uid: a.dataset.userId
 						}
 					}),
-					 // Получаем все лайки под постом (количество, id и названия смайлов)
 					smiles: [...el.querySelectorAll('.post-smiles-content a:not(.rate-btn-plus)')].map(b => {
 						return {
 							count: b.dataset.smileCount,
@@ -100,29 +96,31 @@ const Asmund = {
 							title: b.querySelector('img').getAttribute('title'),
 							image: b.querySelector('img').getAttribute('src')
 						}
-					}).filter(c => c.count > 0) // Избавляемся от "пустых" смайлов
+					}).filter(c => c.count > 0),
+					mentions: [...el.querySelectorAll('.mceNonEditable.mention')].map(c => {
+						return {
+							name: c.innerText.replace('@', ''),
+							uid: c.dataset.userId
+						}
+					}),
 				}
-			}).filter(d => d.quoteInf.length > 0 && d.smiles.length > 0); // И фильтруем от "пустых" ячеек
+			}).filter(d => d.quoteInf.length > 0 && d.smiles.length > 0);
 		},
 
-		// Все посты без цитат
+		// Все посты без цитат со смайлами
 		getInfEmptyPosts: () => {
-			// Получаем все посты
 			return [...document.querySelectorAll('.message-list > li')].map(el => {
 					return {
-							// Запоминаем DOM и ID поста
 						postInf: {
 							post: el,
 							pid: el.dataset.id
 						},
-							// Получаем все цитаты в посте (ник и id цитируемых)
 						quoteInf: [...el.querySelectorAll('.bbCodeQuote:not(.signature)')].map(a => {
 							return {
 								name: a.dataset.author,
 								uid: a.dataset.userId
 							}
 						}),
-							// Получаем все лайки под постом (количество, id и названия смайлов)
 						smiles: [...el.querySelectorAll('.post-smiles-content a:not(.rate-btn-plus)')].map(b => {
 							return {
 								count: b.dataset.smileCount,
@@ -130,52 +128,80 @@ const Asmund = {
 								title: b.querySelector('img').getAttribute('title'),
 								image: b.querySelector('img').getAttribute('src')
 							}
-						}).filter(c => c.count > 0) // Избавляемся от "пустых" смайлов
+						}).filter(c => c.count > 0),
+						mentions: [...el.querySelectorAll('.mceNonEditable.mention')].map(c => {
+							return {
+								name: c.innerText.replace('@', ''),
+								uid: c.dataset.userId
+							}
+						}),
 					}
-			}).filter(d => d.quoteInf.length == 0 && d.smiles.length > 0); // И фильтруем от "пустых" ячеек и постов с цитатами
+			}).filter(d => d.quoteInf.length == 0 && d.smiles.length > 0);
 	   },
-		
-		 /*** Получаем список пользователей, оценивших пост ***/
+
 		getUsers: (pid, sid) => {
-			return fetch("/forum/api/forum/getUsersWhoRatePost", {
+			return fetch("/forum/api/forum/showPostRates", {
 				method: "POST",
 				headers: { "x-requested-with": "XMLHttpRequest" },
 				body: JSON.stringify({
-					"pid": pid, // ID поста
-					"smileId": sid // ID эмоции
+					"pid": pid, //ID поста
+					"smile_id": sid //ID смайла
 				})
-			}).then(r => r.json()); // Тут допишешь проверку на 200/40*/50*, вынести в отдельную ф-ию
+			}).then(r => r.json());
 		},
 		
-		/*** Получить всё о пользователях, что оценили свои цитаты ***/
+		// Нахожу смайл того, кого процитировали
 		getQuoteRatedUsers: async function () {
 			let info = this.getInf(), result = [];
-			
-			// Поэтапно отправляем полученные запросы
+
 			for (let item of info) {
+				let m = item.mentions, p = item.postInf, q = item.quoteInf;
 				for (let smile of item.smiles) {
-					let p = item.postInf, s = smile, q = item.quoteInf;
+					let s = smile;
 					
-					// Работаем с promise
 					let res = await this.getUsers(p.pid, s.sid).then(response => {
-						 // Из ответа нам нужны только ID, собираем их
-						let uids = response.map(a => a['user.id']);
-						for (let nick of q) {
-							 // Нашлось ID цитируемого - запоминаем
-							if (uids.find(i => nick.uid == i) != undefined && nick.uid != Utils.user_id) {
+						let uids = response.map(a => a['link'].split('.')[1]);
+						if (m.length != 0) {
+							for (let id of m) {
+								if (uids.find(i => id.uid == i) != undefined && id.uid != Utils.user_id) {
+									result.push({
+										post: {
+											dom: p.post, //DOM поста
+											id: p.pid //ID поста
+										},
+										user: {
+											quote: 1, //наличие цитат
+											mention: 1, //наличие суммонов
+											name: id.name, //имя пользователя
+											id: id.uid //ID пользователя
+										},
+										smile: {
+											title: s.title, //имя смайла-оценки
+											id: s.sid, //ID смайла-оценки
+											image: s.image //картинка смайла
+										}
+									});
+								}
+							}
+						}
+
+						for (let id of q) {
+							if (uids.find(i => id.uid == i) != undefined && id.uid != Utils.user_id) {
 								result.push({
 									post: {
-										dom: p.post, // DOM поста
-										id: p.pid // ID поста
+										dom: p.post, //DOM поста
+										id: p.pid //ID поста
 									},
 									user: {
-										name: nick.name, // Имя пользователя
-										id: nick.uid // ID пользователя
+										quote: 1, //наличие цитат
+										mention: 0, //наличие суммонов
+										name: id.name, //имя пользователя
+										id: id.uid //ID пользователя
 									},
 									smile: {
-										title: s.title, // Имя смайла-оценки
-										id: s.sid, // ID смайла-оценки
-										image: s.image //Картинка смайла
+										title: s.title, //имя смайла-оценки
+										id: s.sid, //ID смайла-оценки
+										image: s.image //картинка смайла
 									}
 								});
 							}
@@ -183,33 +209,69 @@ const Asmund = {
 					});
 				}
 			}
-			
+
 			return result;
 		},
 
-		// Нахожу смайл автора темы под сообщением без цитаты
+		// Нахожу смайл автора темы под сообщением без цитат
 		getAuthorsSmile: async function () {
 			let info = this.getInfEmptyPosts(), result2 = [];
-			let ts = Topic.user_id;
-			console.log("id тс'а: " + ts);
 			for (let item of info) {
+				let p = item.postInf, m = item.mentions;
 				for (let smile of item.smiles) {
-					let p = item.postInf, s = smile;
+					let s = smile;
 					
 					let res = await this.getUsers(p.pid, s.sid).then(response => {
-						// Собираю id
-						let nicks = response.map(a => a['user.id']);
-						for (let nick of nicks) {
-							if (nick == ts) {
+						let uids = response.map(a => a['link'].split('.')[1]);
+						let marker = 0; //метка для поста без цитаты с сумоном автора темы и его смайлом под постом
+						if (m.length != 0) {
+							for (let id of m) {
+								if (uids.find(i => id.uid == i) != undefined && id.uid != Utils.user_id) {
+									result2.push({
+										post: {
+											dom: p.post, //DOM поста
+											id: p.pid //ID поста
+										},
+										user: {
+											quote: 0, //наличие цитат
+											mention: 1, //наличие суммонов
+											name: id.name, //имя пользователя
+											id: id.uid //ID пользователя
+										},
+										smile: {
+											title: s.title, //имя смайла-оценки
+											id: s.sid, //ID смайла-оценки
+											image: s.image //картинка смайла
+										}
+									});
+								}
+								if (id.uid == Topic.user_id) marker = 1; //метка
+							}
+						}
+						if (marker != 0) return;
+						for (let id of uids) {
+							if (id == Topic.user_id) {/*
+								if (m.length != 0) {
+									console.log(m);
+									console.log(Topic.user_id);
+									if (m.find(i => Topic.user_id == i) != undefined) {
+										console.log('check');
+										return;
+									}
+								}*/
 								result2.push({
 									post: {
-										dom: p.post, // DOM поста
-										id: p.pid // ID поста
+										dom: p.post, //DOM поста
+										id: p.pid //ID поста
+									},
+									user: {
+										quote: 0, //наличие цитат
+										mention: 0,	//наличие суммонов
 									},
 									smile: {
-										title: s.title, // Имя смайла-оценки
-										id: s.sid, // ID смайла-оценки
-										image: s.image //Картинка смайла
+										title: s.title, //имя смайла-оценки
+										id: s.sid, //ID смайла-оценки
+										image: s.image //картинка смайла
 									}
 								});
 							}
@@ -221,29 +283,33 @@ const Asmund = {
 			return result2;
 		},
 		
-		 /*** Отрисовка результата ***/
-		render: (post, name, smile) => {
+		render: (post, user, smile) => {
 			let rated = post.querySelector('div[id|="post-rated-list"]');
 			
-			if (!rated.querySelector(`[data-name="${name}"]`)) {
+			if (!rated.querySelector(`[data-name="${user.name}"]`)) {
 				let title = document.createElement('p');
 				title.style = "padding: 2px 6px; background: #363636; color: #dedede; border-radius: 3px; margin-top: 6px;";
-				title.setAttribute('data-name', name);
-				title.innerHTML = `<b>${name}</b> отреагировал на цитирование - <img src="${smile}">`;
+				title.setAttribute('data-name', user.name);
+				if (user.mention == 1) {
+					title.innerHTML = `<b>${user.name}</b> отреагировал на упоминание - <img src="${smile}">`;
+				} else if (user.quote == 0) {
+					title.innerHTML = `<b>Автор темы</b> отреагировал на пост - <img src="${smile}">`;
+				} else {
+					title.innerHTML = `<b>${user.name}</b> отреагировал на цитирование - <img src="${smile}">`;
+				}
 				
 				rated.append(title);
 			}
 		},
 		
-		 /*** Инициализация emotions ***/
 		init: async function () {
-			if (window.location.pathname.match(/threads\//)) {
+			if (window.location.pathname.match(/forum\/threads/)) {
 				let result = [],
 				list = await this.getQuoteRatedUsers().then(e => {
-					result = e; // Для твоего удобства вывел из promise в синхрон
+					result = e;
 				});
 				for (let i of result) {
-					this.render (i.post.dom, i.user.name, i.smile.image);
+					this.render (i.post.dom, i.user, i.smile.image);
 				}
 				
 				if (Topic.user_id != Utils.user_id) {
@@ -251,9 +317,8 @@ const Asmund = {
 					list2 = await this.getAuthorsSmile().then(a => {
 						result2 = a;
 					});
-					
 					for (let i of result2) {
-						this.render (i.post.dom, 'Автор темы', i.smile.image);
+						this.render (i.post.dom, i.user, i.smile.image);
 					}
 				}
 			}
@@ -279,18 +344,30 @@ const Asmund = {
 
 		appendToSessionStorage: function (name, data) {
 			let old = sessionStorage.getItem(name);
-			if (old === null) old = "";
-			sessionStorage.setItem(name, old + data);
+			if (old == null) {
+				old = "";
+				sessionStorage.setItem(name, data);
+			} else {
+				if (old.indexOf(data) !== ~false) {
+					return;
+				}
+				sessionStorage.setItem(name, old + ',' + data);
+			}
 		},
 		
 		getQuotedIDs: function () {
 			let messages = this.getMessages(),
 				removedMessages = this.getRemovedIDs(messages),
 				result = [];
-				this.appendToSessionStorage('ids', removedMessages);
-				let cache_ids = sessionStorage.getItem('ids');
-				//console.log(cache_ids);
-		
+
+			if (removedMessages.length == 0) return;
+			this.appendToSessionStorage('deleted_ids', removedMessages);
+			let cache_ids = sessionStorage.getItem('deleted_ids');
+			
+			/*let _cache_ids = cache_ids.split(',');			//статистика
+			console.log(cache_ids);
+			console.log("Удалённых постов в теме: " + _cache_ids.length);*/
+
 			for (let message of messages) {
 				let quotes = message.querySelectorAll(`div.bbCodeQuote[data-post-id]`);
 
@@ -309,10 +386,13 @@ const Asmund = {
 		},
 		
 		init: function () {
-			let posts = this.getQuotedIDs();
-			for (let el of posts) {
-				let elem = document.getElementById(`post-${el}`);
-				elem.classList.add('asmund-find');
+			if (window.location.pathname.match(/forum\/threads\//)) {
+				let posts = this.getQuotedIDs();
+				if (posts == undefined) return;
+				for (let el of posts) {
+					let elem = document.getElementById(`post-${el}`);
+					elem.classList.add('asmund-find');
+				}
 			}
 		}
 	},
@@ -327,18 +407,11 @@ const Asmund = {
         getPinned: () => {
             let pinned = localStorage.getItem('asmund-pinned-emotions');
 			return pinned !== null ? JSON.parse(pinned) : [/*{
-				//id: 1033,
-				href: "javascript:Topic.setPostRate(107081, 1033, '/img/forum/emoticons/FeelsClownMan.png?1592047348')",
+				id: 1033,
 				src: "/img/forum/emoticons/FeelsClownMan.png?1552738440",
 			},
 			{
-				//id: 1354,
-				href: "javascript:Topic.setPostRate(107081, 1354, '/img/forum/emoticons/NV.png?1592285569')",
-				src: "/img/forum/emoticons/NV.png?1592285569",
-			}*/
-			/*{
-				//id: 1053, 
-				href: "javascript:Topic.setPostRate(107081, 1053, '/img/forum/emoticons/PepeYes.png?1592048109')",
+				id: 1053, 
 				src: "/img/forum/emoticons/PepeYes.png?1556510258",
 			},
 			{
@@ -352,6 +425,10 @@ const Asmund = {
 			{
 				id: 721,
 				src: "/img/forum/emoticons/roflanLico.png"
+			},
+			{
+				id: 400,
+				src: "/img/forum/emoticons/roflanFacepalm.png"
 			}*/]
 		},
 		
@@ -380,13 +457,9 @@ const Asmund = {
         
         render: (dom, smile) => {
 			let a = document.createElement('a');
-			//a.setAttribute('onclick', `${smile.href}; return false;`);
-			let href = `${smile.href}`;
-			href = href.replace(/\d+/, `${dom.id}`);
-			console.log(href);
-			a.setAttribute('onclick', `${href}`);
+			a.setAttribute('data-asmund-sid', smile.id);
+			a.setAttribute('onclick', `javascript:Topic.setPostRate(${dom.id}, ${smile.id}, '${smile.src}'); return false;`);
 			a.innerHTML = `<img class="asmund-preview-smiles" src="${smile.src}">`;
-
             dom.post.append(a);
 		},
 
@@ -394,28 +467,133 @@ const Asmund = {
 			button.parentNode.removeChild(button);
 		},
 
-		test: function () {
-			console.log("????????");
+		/**
+		* Следит за появлением объекта в DOM сайта
+		* Цикл не прекращается, если указан флаг bool
+		*
+		* @param string elem
+		* @param function callback
+		* @param boolean bool
+		*/ 
+		watching: function ({doc, elem, callback, bool}) {
+			let interval = setInterval(() => {
+				doc = (doc)? doc : document;
+					
+				if (el == doc.querySelector(`${elem}:not(.watched)`)) {
+					callback(el);
+					el.classList.add('watched');
+						
+					if (!bool) clearInterval(interval);
+				}
+			}, 100);
 		},
 
 		addsmiles: function () {
 			let f_post = document.querySelector('.message-list > li:not(.upPost)');
 			let id = f_post.dataset.id;
 			let button = f_post.querySelector('.rate-btn-plus.item.control.rate-btn');
+			if (button == null) return;
 			let That = this;
-			button.onclick = function () {
+			button.onclick = function () {		//кнопка с плюсом
 				Topic.ratePost(id,this);
-				let list = document.querySelectorAll('.tab_panel div');
+				let nodelist = document.querySelectorAll("#modal_phone_wrapper > header > nav > a");
+				let categories = Array.from(nodelist);
+				console.log(categories);
+				for (let cat of categories) {		//категории смайлов
+					cat.onmousedown = function () {
+						setTimeout(function () {
+							let interval = setInterval(function () {
+								let list = document.querySelectorAll('.tab_panel div');
+								console.log(list);
+								for (let n of list) {				//смайлы
+									n.onmousedown = function (e) {
+									//n.addEventListener('mousedown', e => {
+										if (e.shiftKey) {
+											//e.stopPropagation();
+											//e.preventDefault();
+											let div = n.firstElementChild;
+											let href = div.getAttribute('href');
+											let id = href.match(/\d+/g);
+											div.removeAttribute('href');
+											let img = div.firstElementChild;
+											let src = img.getAttribute('src');
+											let smile = {
+												id: id[1],
+												src: src
+											}
+											let json = JSON.stringify(smile);
+											That.addToLocalStorage(json);
+											That.render({
+												post: f_post.querySelector('.fav-smiles'), 
+												id: id
+											}, smile);
+											That.deleteSmiles();
+										}
+									}
+								}
+							}, 100);
+							setTimeout(() => { clearInterval(interval); }, 500);
+						}, 500);
+					}
+				}
+
+
+				/*const element = document.querySelector('.phone_wrapper');
+				//console.log(element);
+				That.watching ({
+					//doc: element,
+					elem: '.tab_panel div',
+					callback: function (el) {
+						//console.log(el.classList);
+						for (let cat of categories) {
+							cat.addEventListener("click", () => {
+								let list = document.querySelectorAll('.tab_panel div');
+								for (let n of list) {
+									//n.onmousedown = function (e) {
+									n.addEventListener('mousedown', e => {
+										if (e.shiftKey) {
+											e.stopPropagation();
+											e.preventDefault();
+											let div = n.firstElementChild;
+											let href = div.getAttribute('href');
+											let id = href.match(/\d+/g);
+											//div.removeAttribute('href');
+											let img = div.firstElementChild;
+											let src = img.getAttribute('src');
+											let smile = {
+												id: id[1],
+												src: src
+											}
+											let json = JSON.stringify(smile);
+											That.addToLocalStorage(json);
+											That.render({
+												post: f_post.querySelector('.fav-smiles'), 
+												id: id
+											}, smile);
+											That.deleteSmiles();
+										}
+									})
+								}
+							});
+						}
+					}
+				});*/
+
+				/*let list = document.querySelectorAll('.tab_panel div');
 				for (let n of list) {
-					n.onmousedown = function (e) {
+					//n.onmousedown = function (e) {
+					n.addEventListener('mousedown', e => {
 						if (e.shiftKey) {
+							e.stopPropagation();
+      						e.preventDefault();
 							let div = n.firstElementChild;
 							let href = div.getAttribute('href');
-							div.removeAttribute('href');
+							let id = href.match(/\d+/g);
+							//div.removeAttribute('href');
 							let img = div.firstElementChild;
 							let src = img.getAttribute('src');
 							let smile = {
-								href: href,
+								id: id[1],
 								src: src
 							}
 							let json = JSON.stringify(smile);
@@ -423,12 +601,11 @@ const Asmund = {
 							That.render({
 								post: f_post.querySelector('.fav-smiles'), 
 								id: id
-							}, 
-							smile
-						);
+							}, smile);
+							That.deleteSmiles();
 						}
-					}
-				}
+					})
+				}*/
 			};
 		},
 
@@ -439,11 +616,11 @@ const Asmund = {
 				let That = this;
 				button.onmousedown = function (e) {
 					if (e.shiftKey) {
-						let href = button.getAttribute('onclick');
+						let id = button.getAttribute('data-asmund-sid');
 						let img = button.firstElementChild;
 						let src = img.getAttribute('src');
 						let smile = {
-							href: href,
+							id: id,
 							src: src
 						}
 						let json = JSON.stringify(smile);
@@ -487,7 +664,7 @@ const Asmund = {
 		// Список trigger слов
 		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', '(?<!тра)ху[йяеёил](?!иган|ьн)', 'пизд',
 		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон|це)нах(?!од|рен|в|ал|ож|од|л)', '(?<!)пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'у[её]б', 'сук(?!куб)',
-		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш|г|щ)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)', 'д[оа]лб[ао][её]б', '(?<!85/100)\\*(?!\\w|не активно)',
+		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш|г|щ|ж)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)', 'д[оа]лб[ао][её]б', /*'(?<!85/100)\\*(?!\\w|не активно)',*/
 		'(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'], //
 
          // Применяемые стили на найденные слова
@@ -735,17 +912,43 @@ const Asmund = {
 			if (n === null) n = 0;
 			n++;
 			sessionStorage.setItem(item, n);
-			//console.log('Поставил дизрапторов ' + `${item}: ` + n); 
 		},
 
-		console_log: function (nicks) {
+		addNickToSessionStorage: function (item) {
+			let n = sessionStorage.getItem('arr_of_nicks');
+			if (n === null) {
+				sessionStorage.setItem('arr_of_nicks', item);
+				return;
+			}
+			n = n.split(',');
+			if (n.includes(item)) {
+				return;
+			} else {
+				n = n.join();
+				sessionStorage.setItem('arr_of_nicks', n + ',' + item);
+			}
+		},
+
+		console_log: function () {
+			let nicks = sessionStorage.getItem('arr_of_nicks');
+			if (nicks == null) {
+				return;
+			}
+			nicks = nicks.split(',');
 			for (let nick of nicks) {
-				console.log('Поставил ' + sessionStorage.getItem(nick) + ' дизрапторов ' + `${nick}`);
+				//if (sessionStorage.getItem(nick) > 10) {
+					console.log('Поставил ' + sessionStorage.getItem(nick) + ' дизрапторов ' + `${nick}`);
+				//}
 			}
 		},
 
 		count: function () {
-			let array = [];
+			let array = sessionStorage.getItem('arr_of_nicks');
+			if (array == null) {
+				array = [];
+			} else {
+				array = array.split(',');
+			}
 			document.querySelectorAll('.stream-item').forEach(el => {
 				let a = el.querySelector('.list-inline.stream-meta.muted').innerHTML;
 				if (a.indexOf("Dislike.png") !== ~false) {
@@ -754,14 +957,12 @@ const Asmund = {
 					if (array.includes(nick[0])) {
 						;
 					} else {
-						//console.log(nick);
-						array.push(nick[0]);
+						this.addNickToSessionStorage(nick[0]);
 					}
 					this.addToSessionStorage(`${nick}`);
 				}
 			});
-			console.log(array);
-			this.console_log(array);
+			this.console_log();
 		},
 
 		init: function () {
@@ -856,11 +1057,59 @@ const Asmund = {
 	},*/
 
 
+
+	ipCheck: {
+		request: async function (id) {
+			let xhr = new XMLHttpRequest();
+			xhr.open('GET', `https://dota2.ru/forum/members/.${id}/`);
+			xhr.responseType = 'text';
+			let result;
+			xhr.addEventListener('readystatechange', function () {
+				if ((xhr.readyState == 4) && (xhr.status == 200)) {
+					result = xhr.responseText;
+					//console.log(result);
+				}
+			});
+			console.log(result);
+			xhr.send();
+			return result;
+		},
+
+		proxycheck: function (id) {
+			let result = this.request(id);
+			console.log(result);
+		},
+
+		init: function () {
+			if (Utils.groupName != "Супермодератор") {
+				return;
+			}
+			let id = 810832;
+			this.proxycheck(id);
+		}
+	},
+
+
+
+	delete_smile_check: {
+		init: function () {
+			let delete_nick = "Ned_Stark";
+			document.querySelectorAll('.stream-item').forEach(el => {
+				let nick = el.querySelector("#like-post- > div > div.stream-item-header > a > img");
+				nick = nick.getAttribute('alt');
+				if (nick != delete_nick) {
+					el.parentNode.removeChild(el);
+				}
+			});
+		}
+	},
+
+
 	
 	test: {
 		init: function () {
 			console.log("Скрипт выполнился до самого конца");
-			let n = document.querySelector('.default-rate');
+			//let n = document.querySelector('.default-rate');
 			/*n.addEventListener('keydown', function (e) {
 				if (e.shiftKey) {
 					n.onclick = function (a) {
@@ -872,12 +1121,12 @@ const Asmund = {
 					}
 				}
 			});*/
-			n.onmousedown = function (e) {
+			/*n.onmousedown = function (e) {
 				if (e.shiftKey) {
 					n.removeAttribute('href');
 					console.log("||||||");
 				}
-			}
+			}*/
 		}
 	},
 
@@ -887,16 +1136,18 @@ const Asmund = {
      /*** Общая инициализация компонентов ***/
     init: function () {
 		this.highlight.init();
-		this.emotions.init();
+		this.quote_emotions.init();
 		this.removeHelper.init();
 		this.favoritesEmotions.init();
 		this.searchBadWords.init();
-		//this.checkSignature.init();
+		//this.checkSignature.init(); //подписей нет (24.10.20)
 		this.checkStream.init();
 		//this.openTopics.init();
 		this.statistics.init();
 		this.dislikes.init();
 		//this.notification_Helper.init();
+		//this.ipCheck.init();
+		//this.delete_smile_check.init();
 		this.test.init();
     }
 }
