@@ -17,8 +17,6 @@ img.asmund-preview-smiles:hover {
 
 
 
-
-
 /** Стиль для постов с цитатами удалённых сообщений **/
 .asmund-find:not(.deleted) {
     position: relative;
@@ -50,6 +48,52 @@ img.asmund-preview-smiles:hover {
 
 
 
+.premod {
+    position: relative;
+}
+
+.premod:after {
+    content: 'Нарушение';
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    text-align: center;
+    color: white;
+    position: absolute;
+    background: #FF0000;
+    top: 85px;
+    left: 0px;
+    width: 24px;
+    font-size: 17px;
+    clear: unset!important;
+    visibility: unset!important;
+    height: 120px!important;
+    border-radius: 12px 0px 0px 12px;
+}
+
+.premod {
+    border: 2px dashed #FF0000!important;
+}
+
+
+.premod2 {
+    position: relative;
+}
+.premod2:after {
+    content: 'Нарушение';
+    position: absolute;
+    color: white;
+    right: 0px;
+    bottom: 0px;
+    padding: 4px 6px;
+    background: #FF0000;
+}
+.premod2 {
+    border: 2px dashed #FF0000!important;
+    /*outline: 2px dashed #FF0000!important;*/
+    /*outline-offset: -2px;*/
+}
+
+
 .user_signature:before {
     content: 'Нарушение';
     position: absolute;
@@ -60,18 +104,5 @@ img.asmund-preview-smiles:hover {
     background: #FF0000;
 }
 .user_signature {
-    border: 2px dashed #FF0000!important;
-}
-
-.user_signature_profile:before {
-    content: 'Нарушение';
-    position: absolute;
-    color: white;
-    right: 10px;
-    margin-top: -12px;
-    padding: 4px 6px;
-    background: #FF0000;
-}
-.user_signature_profile {
     border: 2px dashed #FF0000!important;
 }

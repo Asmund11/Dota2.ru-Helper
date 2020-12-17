@@ -250,15 +250,7 @@ const Asmund = {
 						}
 						if (marker != 0) return;
 						for (let id of uids) {
-							if (id == Topic.user_id) {/*
-								if (m.length != 0) {
-									console.log(m);
-									console.log(Topic.user_id);
-									if (m.find(i => Topic.user_id == i) != undefined) {
-										console.log('check');
-										return;
-									}
-								}*/
+							if (id == Topic.user_id) {
 								result2.push({
 									post: {
 										dom: p.post, //DOM поста
@@ -663,9 +655,9 @@ const Asmund = {
 	searchBadWords: {
 		// Список trigger слов
 		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', '(?<!тра)ху[йяеёил](?!иган|ьн)', 'пизд',
-		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон|це)нах(?!од|рен|в|ал|ож|од|л)', '(?<!)пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'у[её]б', 'сук(?!куб)',
-		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш|г|щ|ж)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст)', '(?<!ре|р|а|у|до|ор)бля(?!е|й)', 'д[оа]лб[ао][её]б', /*'(?<!85/100)\\*(?!\\w|не активно)',*/
-		'(?<!\\w)\\#(?!\\w|дозор|\\\\|"|\/)'], //
+		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон|це|г)нах(?!од|рен|в|ал|ож|од|л)', '(?<!)пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'у[её]б', 'сук(?!куб)', '(?<!в)суч',
+		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш|г|щ|ж|б)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст|лей)', '(?<!ре|р|а|у|до|ор|лю)бля(?!е|й)', 'д[оа]лб[ао][её]б', '\\*',
+		'\\#(?!\\w)'], //
 
          // Применяемые стили на найденные слова
         styles: [
@@ -696,12 +688,12 @@ const Asmund = {
             render: function (list, site, wind) {
                 let ct = this.canvas.getContext('2d');
                
-				console.log("Сайт: " + site + " Окно: " + wind);
+				//console.log("Сайт: " + site + " Окно: " + wind);
                 for (let item of list) {
 					//console.log(item);
 					let y = item.getClientRects()[0].top, eltop = (y / site) * wind; // element top
                        
-                    console.log(y, eltop);
+                    //console.log(y, eltop);
                        
                     ct.beginPath();
                     ct.moveTo(20, eltop);
@@ -727,8 +719,8 @@ const Asmund = {
 				);*/
 				this.windowHeight = window.innerHeight;
 				//this.windowHeight = document.documentElement.clientHeight;
-				console.log(this.fullHeight);
-				console.log(this.windowHeight);
+				//console.log(this.fullHeight);
+				//console.log(this.windowHeight);
                
                 this.canvas = document.createElement('canvas');
                 this.canvas.style = 'position: fixed; right: 0; top: 0; width: 20px; height: 100%';
@@ -760,34 +752,41 @@ const Asmund = {
          
          // Инициализация модуля
         init: function () {
-			let strs = this.getStrs(),
-				strsPremod = this.getStrsPremod(),
-                rexp = this.regexp(),
-                styles = this.styles.join('; ');
-			if (strs.length != 0) {
-				for (let str of strs) {
-					let _str = str.querySelectorAll('.messageText.baseHtml:not(.signature) p');
-					for (let __str of _str) {
-						if (rexp.test(__str.innerHTML)) {
-							__str.innerHTML = __str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
-							__str.style = "background: #f1c40f; color: #000000";
-							if (str.classList.contains("deleted") == false) {
-								this.renderInfo.list.push(__str);
+			if (window.location.pathname.match(/forum\/[(threads)(abuses)]/)) {
+				let strs = this.getStrs(),
+					rexp = this.regexp(),
+					styles = this.styles.join('; ');
+				if (strs.length != 0) {
+					for (let str of strs) {
+						let _str = str.querySelectorAll('.messageText.baseHtml:not(.signature) p');
+						for (let __str of _str) {
+							if (rexp.test(__str.innerHTML)) {
+								__str.innerHTML = __str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
+								__str.style = "background: #f1c40f; color: #000000";
+								if (str.classList.contains("deleted") == false) {
+									this.renderInfo.list.push(__str);
+								}
 							}
 						}
 					}
+					this.renderInfo.init();
 				}
-				this.renderInfo.init();
 			}
-			if (strsPremod.length != 0) {
-				for (let str of strsPremod) {
-					if (rexp.test(str.innerHTML)) {
-						str.innerHTML = str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
-						str.style = "background: #f1c40f; color: #000000";
-						this.renderInfo.list.push(str);
+
+			if (window.location.pathname.match(/forum\/premoderation/)) {
+				let strsPremod = this.getStrsPremod(),
+					rexp = this.regexp(),
+					styles = this.styles.join('; ');
+				if (strsPremod.length != 0) {
+					for (let str of strsPremod) {
+						if (rexp.test(str.innerHTML)) {
+							str.innerHTML = str.innerHTML.replace(rexp, `<span style="${styles}">\$1</span>`);
+							str.style = "background: #f1c40f; color: #000000";
+							this.renderInfo.list.push(str);
+						}
 					}
+					this.renderInfo.init();
 				}
-				this.renderInfo.init();
 			}
         }
 	},
@@ -1105,28 +1104,115 @@ const Asmund = {
 	},
 
 
-	
+	premod_helper: {
+		request_date: async function (url, now) {
+			let response = await fetch (url);
+			let html = await response.text();
+			let temp = document.createElement('div');
+			temp.innerHTML = html;
+
+			let time = temp.querySelector('.topic-created-time time').getAttribute('data-time');
+			time = parseInt(time, 10);
+			if (now - time <= 5259600) {
+				return;
+			} else if (temp.querySelectorAll('.message-list > li').length == 1) {	//первый пост на странице
+				let pages = temp.querySelectorAll('.pagination.pull-left.margin-bottom-10 > li');
+				let page = pages[pages.length - 2];
+				page = page.firstChild.getAttribute('href');
+				page = "https://dota2.ru" + page;
+
+				response = await fetch (page);
+				html = await response.text();
+				temp = document.createElement('div');
+				temp.innerHTML = html;
+
+				time = temp.querySelectorAll('time[data-time]');
+				time = time[time.length - 1]; let date = time.getAttribute('title');
+				time = time.getAttribute('data-time'); time = parseInt(time, 10);
+				if (now - time >= 5259600) {
+					return date;
+				}
+			} else {															   //на странице есть ещё посты
+				time = temp.querySelectorAll('.post-send-time time[data-time]');
+				time = time[time.length - 2]; let date = time.getAttribute('title');
+				time = time.getAttribute('data-time'); time = parseInt(time, 10);
+				if (now - time >= 5259600) {
+					return date;
+				}
+			}
+		},
+
+		request_user_info: async function (url) {
+			let response = await fetch (url);
+			let html = await response.text();
+			let temp = document.createElement('div');
+			temp.innerHTML = html;
+
+			let add_info = temp.querySelector('#profile-addition-info > div.widget-content.padding-10.text-small > div'); add_info = add_info.lastElementChild.innerText;
+			if (add_info.indexOf("Метки") !== ~false && add_info.indexOf("Отсутствуют") == ~false) {
+				;
+			} else {
+				add_info = undefined;
+			}
+			return add_info;
+		},
+
+		init: function () {
+			if (window.location.pathname.match(/forum\/premoderation/)) {
+				let now = Date.now(); now = now / 1000;
+				/*let test = document.querySelector('.inner-content');
+				test.classList.add('premod2');*/
+
+				/*let p = document.createElement('p');
+				p.className = "info";
+				let meta = document.querySelector('.inner-content');
+				meta.append(p);
+				meta.classList.add('premod2');*/
+
+				document.querySelectorAll('.search-results-list li').forEach(el => {
+					/*let p = document.createElement('p');
+					p.className = "info";
+					let meta = el.querySelector('.meta');
+					meta.append(p);
+					el.classList.add('premod2');*/
+
+					if (el.querySelector('.content-type').innerHTML != "Сообщение") {console.log("!!!");return;}
+					let url = el.querySelector('.content-type').getAttribute('href');
+					url = "https://dota2.ru/forum/" + url;
+					let user_url = el.querySelector('.meta a').getAttribute('href');
+					user_url = "https://dota2.ru/forum/" + user_url;
+					this.request_date(url, now)
+					.then(result => {
+						if (result == undefined) return;
+						let p = document.createElement('p');
+						p.className = "info";
+						p.innerHTML = "Последнее сообщение в теме: " + result;
+						let meta = el.querySelector('.meta');
+						meta.append(p);
+						el.classList.add('premod2');
+					})
+
+					this.request_user_info(user_url)
+					.then(result => {
+						if (result == undefined) return;
+						let p = document.createElement('p');
+						p.className = "info_vnp";
+						p.innerHTML = result;
+						let meta = el.querySelector('.meta');
+						meta.append(p);
+						el.classList.add('premod2');
+						console.log(result);
+					})
+				});
+			}
+		}
+	},
+
+
+
 	test: {
 		init: function () {
 			console.log("Скрипт выполнился до самого конца");
-			//let n = document.querySelector('.default-rate');
-			/*n.addEventListener('keydown', function (e) {
-				if (e.shiftKey) {
-					n.onclick = function (a) {
-						if (a.button == 0) {
-							//a.preventDefault();
-							console.log("~~~~~");
-							//return false;
-						}
-					}
-				}
-			});*/
-			/*n.onmousedown = function (e) {
-				if (e.shiftKey) {
-					n.removeAttribute('href');
-					console.log("||||||");
-				}
-			}*/
 		}
 	},
 
@@ -1135,10 +1221,10 @@ const Asmund = {
 
      /*** Общая инициализация компонентов ***/
     init: function () {
-		this.highlight.init();
+		//this.highlight.init();
 		this.quote_emotions.init();
 		this.removeHelper.init();
-		this.favoritesEmotions.init();
+		//this.favoritesEmotions.init();
 		this.searchBadWords.init();
 		//this.checkSignature.init(); //подписей нет (24.10.20)
 		this.checkStream.init();
@@ -1148,6 +1234,7 @@ const Asmund = {
 		//this.notification_Helper.init();
 		//this.ipCheck.init();
 		//this.delete_smile_check.init();
+		this.premod_helper.init();
 		this.test.init();
     }
 }
