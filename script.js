@@ -655,8 +655,8 @@ const Asmund = {
 	searchBadWords: {
 		// Список trigger слов
 		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', '(?<!тра)ху[йяеёил](?!иган|ьн)', 'пизд',
-		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон|це|г)нах(?!од|рен|в|ал|ож|од|л)', '(?<!)пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'у[её]б', 'сук(?!куб)', '(?<!в)суч',
-		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш|г|щ|ж|б)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст|лей)', '(?<!ре|р|а|у|до|ор|лю)бля(?!е|й)', 'д[оа]лб[ао][её]б', '\\*',
+		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон|це|г|тя|те)нах(?!од|рен|в|ал|ож|од|л)', 'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'у[её]б', '(?<!в)су[кч](?!куб)',
+		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш|г|щ|ж|б|ц)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст|лей)', 'рофланебало', '(?<!ре|р|а|у|до|ор|лю)бля(?!е|й)', 'д[оа]лб[ао][её]б', '\\*',
 		'\\#(?!\\w)'], //
 
          // Применяемые стили на найденные слова
@@ -1176,33 +1176,52 @@ const Asmund = {
 					meta.append(p);
 					el.classList.add('premod2');*/
 
-					if (el.querySelector('.content-type').innerHTML != "Сообщение") {console.log("!!!");return;}
-					let url = el.querySelector('.content-type').getAttribute('href');
-					url = "https://dota2.ru/forum/" + url;
-					let user_url = el.querySelector('.meta a').getAttribute('href');
-					user_url = "https://dota2.ru/forum/" + user_url;
-					this.request_date(url, now)
-					.then(result => {
-						if (result == undefined) return;
-						let p = document.createElement('p');
-						p.className = "info";
-						p.innerHTML = "Последнее сообщение в теме: " + result;
-						let meta = el.querySelector('.meta');
-						meta.append(p);
-						el.classList.add('premod2');
-					})
+					if (el.querySelector('.content-type').innerHTML == "Сообщение" || el.querySelector('.content-type').innerHTML == "Правка сообщения") {
+						let url = el.querySelector('.content-type').getAttribute('href');
+						url = "https://dota2.ru/forum/" + url;
+						let user_url = el.querySelector('.meta a').getAttribute('href');
+						user_url = "https://dota2.ru/forum/" + user_url;
+						this.request_date(url, now)
+						.then(result => {
+							if (result == undefined) return;
+							let p = document.createElement('p');
+							p.className = "info";
+							p.innerHTML = "Последнее сообщение в теме: " + result;
+							let meta = el.querySelector('.meta');
+							meta.append(p);
+							el.classList.add('premod2');
+						})
 
-					this.request_user_info(user_url)
-					.then(result => {
-						if (result == undefined) return;
-						let p = document.createElement('p');
-						p.className = "info_vnp";
-						p.innerHTML = result;
-						let meta = el.querySelector('.meta');
-						meta.append(p);
-						el.classList.add('premod2');
-						console.log(result);
-					})
+						this.request_user_info(user_url)
+						.then(result => {
+							if (result == undefined) return;
+							let p = document.createElement('p');
+							p.className = "info_vnp";
+							p.innerHTML = result;
+							let meta = el.querySelector('.meta');
+							meta.append(p);
+							el.classList.add('premod2');
+							console.log(result);
+						})
+					}
+					if (el.querySelector('.content-type').innerHTML == "Тема") {
+						let url = el.querySelector('.content-type').getAttribute('href');
+						url = "https://dota2.ru/forum/" + url;
+						let user_url = el.querySelector('.meta a').getAttribute('href');
+						user_url = "https://dota2.ru/forum/" + user_url;
+
+						this.request_user_info(user_url)
+						.then(result => {
+							if (result == undefined) return;
+							let p = document.createElement('p');
+							p.className = "info_vnp";
+							p.innerHTML = result;
+							let meta = el.querySelector('.meta');
+							meta.append(p);
+							el.classList.add('premod2');
+							console.log(result);
+						})
+					}
 				});
 			}
 		}
