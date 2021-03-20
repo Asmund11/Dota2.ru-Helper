@@ -1,50 +1,42 @@
 const Asmund = {
-	/* Highlight - подсветка сообщений раздела модератора */
-	/*														*/
-	/********************************************************/
+	//Подсветка постов юзера в разделе модератора
 	highlight: {
-		 /*** Список категорий для групп пользователей ***/
 		modGroupList: {
 			"Модератор основного раздела": ["Основной раздел"],
 			"Модератор технического раздела": ["Технический раздел"],
 			"Модератор других игр и разного": ["Другие игры", "Разное"]
 		},
 
-		 /*** Список форумов в категориях ***/
 		categories: {
 			"Основной раздел": ["Общие вопросы и обсуждения", "Обитель нытья", "Dota Plus, компендиумы и ивенты", "Обновления и патчи", "Рейтинговая система и статистика",
-				"Герои: общие обсуждения", "Dream Dota", "Нестандартные сборки", "Киберспорт: общие обсуждения", "Игроки и команды", "Турниры, матчи и прогнозы",
-				"Поиск игроков для ммр и паб игр", "Поиск игроков для создания команды", "Поиск команды для совместных игр и участия в турнирах",
-				"Поиск игроков для ивентов и абузов", "Обмен предметами и гифтами", "Обсуждения и цены", "Медиа Dota 2", "Стримы", "Custom Hero Chuos", "Развитие портала"],
+				"Герои: общие обсуждения", "Dream Dota", "Киберспорт: матчи, турниры, команды и игроки", "Поиск игроков в Dota 2", "Поиск игроков для создания команды",
+				"Поиск команды для совместных игр и участия в турнирах", "Поиск игроков для ивентов и абузов", "Обмен внутриигровыми предметами Dota 2", "Обсуждения и цены",
+				"Медиа Dota 2", "Стримы", "Развитие портала"],
 			"Counter-Strike: Global Offensive": ["[CS:GO] Общие вопросы и обсуждения", "[CS:GO] Киберспорт"],
-			"Технический раздел": ["Техническая поддержка по Dota 2", "Железо и обсуждения", "Сборка ПК, значительный апгрейд", "Выбор комплектующих, ноутбуков, консолей",
-				"Компьютерная помощь по остальным вопросам", "Игровые девайсы, периферия и прочая техника", "Мобильные девайсы", "Софт и прочие технические вопросы", "Steam",
-				"Программирование"],
-			"Другие игры": ["Другие игры", "The Elder Scrolls", "Path of Exile", "Shooter, Battle Royale", "Apex Legends", "ККИ", "Hearthstone", "Artifact",
-			"League of Legends", "MMO (RPG, FPS, RTS)", "World of Warcraft", "Dota Underlords", "Dota Auto Chess", "Консольные игры", "Мобильные игры"],
-			"Разное": ["Таверна", "Творчество", "Музыка", "Кино и сериалы", "Аниме и прочее", "Спорт", "Книги"]
+			"Технический раздел": ["Техническая поддержка по Dota 2", "Железо, новости и обсуждения", "Сборка ПК, значительный апгрейд",
+				"Выбор комплектующих, ноутбуков, консолей", "Компьютерная помощь по остальным вопросам", "Игровые девайсы, периферия и прочая техника", "Мобильные девайсы",
+				"Софт и прочие технические вопросы", "Steam", "Программирование"],
+			"Другие игры": ["Другие игры", "Консольные игры", "MMO", "Path of Exile", "Shooter, Battle Royale", "ККИ и Автобаттлеры", "Hearthstone", "Artifact"],
+			"Разное": ["Таверна", "Творчество", "Автомобили", "Музыка", "Кино и сериалы", "Аниме и прочее", "Спорт", "Книги"]
 		},
 		
-		 /*** Получение группы пользователя ***/
 		loadGroupName: async () => {
 			return Utils.groupName;
 		},
 
-		 /*** Получить форумы для группы пользователя ***/
 		getForums: function () {
-			 // Получаем группу и перебираем категории
 			return this.loadGroupName().then(group => {
 				let list = this.modGroupList[group], result = [];
 				
 				if (list === undefined) {
-					console.log(`Пользователь ${Utils.username} не состоит ни в одной из групп модераторов разделов.\nЕго группа: ${group}.`);
+					//console.log(`Пользователь ${Utils.username} не состоит ни в одной из групп модераторов разделов.\nЕго группа: ${group}.`);
 					return;
 				}
 
 				for (let cat in this.categories) {
 					if (list.indexOf(cat) !== ~false) {
 						result = result.concat(this.categories[cat]);
-						console.log(result);
+						//console.log(result);
 					}
 				}
 				
@@ -52,14 +44,13 @@ const Asmund = {
 			});
 		},
 		
-		 /*** Инициализация highlight ***/
 		init: function () {
 			this.getForums().then(response => {
 				if (response == null)
 					return;
 				document.querySelectorAll('.search-results-list li').forEach(el => {
 					let fold = el.querySelector('.meta a[href*="forums/"]').innerHTML;
-					console.log(fold);
+					//console.log(fold);
 					if (response.indexOf(fold) === ~false) {
 						el.style.setProperty('opacity', '0.4');
 					}
@@ -71,11 +62,8 @@ const Asmund = {
 
 
 
-	/* Emotions - определение оценки автора цитируемого поста */
-	/*														  */
-	/**********************************************************/
+	//Определение оценки автора цитируемого поста
 	quote_emotions: {
-		// Все посты с цитатами и смайлами
 		getInf: () => {
 			return [...document.querySelectorAll('.message-list > li')].map(el => {
 				return {
@@ -107,7 +95,7 @@ const Asmund = {
 			}).filter(d => d.quoteInf.length > 0 && d.smiles.length > 0);
 		},
 
-		// Все посты без цитат со смайлами
+		//Все посты без цитат со смайлами
 		getInfEmptyPosts: () => {
 			return [...document.querySelectorAll('.message-list > li')].map(el => {
 					return {
@@ -144,13 +132,13 @@ const Asmund = {
 				method: "POST",
 				headers: { "x-requested-with": "XMLHttpRequest" },
 				body: JSON.stringify({
-					"pid": pid, //ID поста
-					"smile_id": sid //ID смайла
+					"pid": pid,
+					"smile_id": sid
 				})
 			}).then(r => r.json());
 		},
 		
-		// Нахожу смайл того, кого процитировали
+		//Поиск смайла того, кого процитировали
 		getQuoteRatedUsers: async function () {
 			let info = this.getInf(), result = [];
 
@@ -213,7 +201,7 @@ const Asmund = {
 			return result;
 		},
 
-		// Нахожу смайл автора темы под сообщением без цитат
+		//Поиск смайла автора темы под сообщением без цитат
 		getAuthorsSmile: async function () {
 			let info = this.getInfEmptyPosts(), result2 = [];
 			for (let item of info) {
@@ -321,10 +309,7 @@ const Asmund = {
 
 
 
-	
-	/* Подсветка цитат удалённых сообщений */
-	/*										*/
-	/************************************** */
+	//Подсветка цитат удалённых сообщений
 	removeHelper: {
 		getMessages: () => {
 			return [...document.querySelectorAll('#message-list > li')]
@@ -392,9 +377,7 @@ const Asmund = {
 
 
 
-	/* Избранные смайлы под постом */
-	/*								*/
-	/********************************/
+	//Избранные смайлы под постом
 	favoritesEmotions: {
         getPinned: () => {
             let pinned = localStorage.getItem('asmund-pinned-emotions');
@@ -528,76 +511,6 @@ const Asmund = {
 						}, 500);
 					}
 				}
-
-
-				/*const element = document.querySelector('.phone_wrapper');
-				//console.log(element);
-				That.watching ({
-					//doc: element,
-					elem: '.tab_panel div',
-					callback: function (el) {
-						//console.log(el.classList);
-						for (let cat of categories) {
-							cat.addEventListener("click", () => {
-								let list = document.querySelectorAll('.tab_panel div');
-								for (let n of list) {
-									//n.onmousedown = function (e) {
-									n.addEventListener('mousedown', e => {
-										if (e.shiftKey) {
-											e.stopPropagation();
-											e.preventDefault();
-											let div = n.firstElementChild;
-											let href = div.getAttribute('href');
-											let id = href.match(/\d+/g);
-											//div.removeAttribute('href');
-											let img = div.firstElementChild;
-											let src = img.getAttribute('src');
-											let smile = {
-												id: id[1],
-												src: src
-											}
-											let json = JSON.stringify(smile);
-											That.addToLocalStorage(json);
-											That.render({
-												post: f_post.querySelector('.fav-smiles'), 
-												id: id
-											}, smile);
-											That.deleteSmiles();
-										}
-									})
-								}
-							});
-						}
-					}
-				});*/
-
-				/*let list = document.querySelectorAll('.tab_panel div');
-				for (let n of list) {
-					//n.onmousedown = function (e) {
-					n.addEventListener('mousedown', e => {
-						if (e.shiftKey) {
-							e.stopPropagation();
-      						e.preventDefault();
-							let div = n.firstElementChild;
-							let href = div.getAttribute('href');
-							let id = href.match(/\d+/g);
-							//div.removeAttribute('href');
-							let img = div.firstElementChild;
-							let src = img.getAttribute('src');
-							let smile = {
-								id: id[1],
-								src: src
-							}
-							let json = JSON.stringify(smile);
-							That.addToLocalStorage(json);
-							That.render({
-								post: f_post.querySelector('.fav-smiles'), 
-								id: id
-							}, smile);
-							That.deleteSmiles();
-						}
-					})
-				}*/
 			};
 		},
 
@@ -651,15 +564,13 @@ const Asmund = {
 
 
 
-	/***  Поиск матерных слов в постах ***/
+	//Поиск матерных слов в постах
 	searchBadWords: {
-		// Список trigger слов
 		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', '(?<!тра)ху[йяеёил](?!иган|ьн)', 'пизд',
 		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон|це|г|тя|те)нах(?!од|рен|в|ал|ож|од|л)', 'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'у[её]б', '(?<!в)су[кч](?!куб)',
 		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш|г|щ|ж|б|ц)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст|лей)', 'рофланебало', '(?<!ре|р|а|у|до|ор|лю)бля(?!е|й)', 'д[оа]лб[ао][её]б', '\\*',
-		'\\#(?!\\w)'], //
+		'(?<!\/)\\#(?!\\w)'],
 
-         // Применяемые стили на найденные слова
         styles: [
             //'border: 1px dashed green',
             //'color: #fff',
@@ -670,19 +581,16 @@ const Asmund = {
 			'color: #000000'
         ],
        
-         // Получение родительского this
         This: function () {
             return this
         },
        
-         // Рендер скроллинфы
         renderInfo: {
             divider: 1000,
             windowHeight: 0,
             fullHeight: 0,
             canvas: undefined,
  
-             // Список элементов
             list: [],
            
             render: function (list, site, wind) {
@@ -691,7 +599,7 @@ const Asmund = {
 				//console.log("Сайт: " + site + " Окно: " + wind);
                 for (let item of list) {
 					//console.log(item);
-					let y = item.getClientRects()[0].top, eltop = (y / site) * wind; // element top
+					let y = item.getClientRects()[0].top, eltop = (y / site) * wind; //element top
                        
                     //console.log(y, eltop);
                        
@@ -728,20 +636,18 @@ const Asmund = {
                 this.canvas.setAttribute('height', `${this.windowHeight}px`);
                
                 let list = this.list,
-                    sp = this.fullHeight / this.divider, // site percent
-                    wp = this.windowHeight / this.divider; // window percent
+                    sp = this.fullHeight / this.divider, //site percent
+                    wp = this.windowHeight / this.divider; //window percent
                    
                    
                 this.render(list, sp, wp);
             }
         },
        
-         // Генератор regexp на основе trigger слов
         regexp: function () {
             return new RegExp(`(${this.trigger.join('|')})`, 'ig')
         },
        
-         // Получение всех строк
         getStrs: () => {
 			return [...document.querySelectorAll('.message.staff')]; // посты
 		},
@@ -750,7 +656,6 @@ const Asmund = {
             return [...document.querySelectorAll('.snippet.messageInfo.secondary-content.premoderation p')]; // премоды
         },
          
-         // Инициализация модуля
         init: function () {
 			if (window.location.pathname.match(/forum\/[(threads)(abuses)]/)) {
 				let strs = this.getStrs(),
@@ -777,6 +682,7 @@ const Asmund = {
 				let strsPremod = this.getStrsPremod(),
 					rexp = this.regexp(),
 					styles = this.styles.join('; ');
+				console.log(strsPremod);
 				if (strsPremod.length != 0) {
 					for (let str of strsPremod) {
 						if (rexp.test(str.innerHTML)) {
@@ -794,41 +700,8 @@ const Asmund = {
 
 
 
-	/** Проверка подписей **/
-	checkSignature: {
-		accessHeight: 225,
 
-		checkSignature: function (item) {
-			if (item.clientHeight > this.accessHeight) {
-				console.log("Высота подписи:", item.clientHeight);
-				item.classList.add('user_signature');
-			}
-		},
-
-		checkSignature_profile: function (item) {
-			if (item.clientHeight > this.accessHeight) {
-				console.log("Высота подписи:", item.clientHeight);
-				item.classList.add('user_signature_profile');
-			} else {
-				console.log("Высота подписи:", item.clientHeight);
-			}
-		},
-
-		init: function () {
-			if (window.location.pathname.match(/forum\/threads\//)) {
-				document.querySelectorAll('blockquote.signature').forEach(a => this.checkSignature(a))
-				return;
-			}
-			if (window.location.pathname.match(/\/members\//)) {
-				document.querySelectorAll('blockquote.signature').forEach(a => this.checkSignature_profile(a))
-			}
-		}
-	},
-
-
-
-
-	/** Проверка на две темы с Стримах **/
+	//Проверка на две темы в стримах
 	checkStream: {
 		init: function () {
 			if (window.location.pathname.match(/forum\/forums\/strimy\.20\//)) {
@@ -1160,22 +1033,8 @@ const Asmund = {
 		init: function () {
 			if (window.location.pathname.match(/forum\/premoderation/)) {
 				let now = Date.now(); now = now / 1000;
-				/*let test = document.querySelector('.inner-content');
-				test.classList.add('premod2');*/
-
-				/*let p = document.createElement('p');
-				p.className = "info";
-				let meta = document.querySelector('.inner-content');
-				meta.append(p);
-				meta.classList.add('premod2');*/
 
 				document.querySelectorAll('.search-results-list li').forEach(el => {
-					/*let p = document.createElement('p');
-					p.className = "info";
-					let meta = el.querySelector('.meta');
-					meta.append(p);
-					el.classList.add('premod2');*/
-
 					if (el.querySelector('.content-type').innerHTML == "Сообщение" || el.querySelector('.content-type').innerHTML == "Правка сообщения") {
 						let url = el.querySelector('.content-type').getAttribute('href');
 						url = "https://dota2.ru/forum/" + url;
@@ -1238,14 +1097,13 @@ const Asmund = {
 
 	
 
-     /*** Общая инициализация компонентов ***/
+    //Общая инициализация компонентов
     init: function () {
-		//this.highlight.init();
+		this.highlight.init();
 		this.quote_emotions.init();
 		this.removeHelper.init();
 		//this.favoritesEmotions.init();
 		this.searchBadWords.init();
-		//this.checkSignature.init(); //подписей нет (24.10.20)
 		this.checkStream.init();
 		//this.openTopics.init();
 		this.statistics.init();
