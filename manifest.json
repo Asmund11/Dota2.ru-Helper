@@ -1,6 +1,6 @@
 {
 	"name": "Extension for moders",
-	"version": "1.5.0",
+	"version": "1.7.0",
 	"description": "Расширение для модераторов dota2.ru",
 	"manifest_version": 2,
 	"icons": {

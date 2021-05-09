@@ -65,7 +65,7 @@ const Asmund = {
 	//Определение оценки автора цитируемого поста
 	quote_emotions: {
 		getInf: () => {
-			return [...document.querySelectorAll('.message-list > li')].map(el => {
+			return [...document.querySelectorAll('.forum-theme__list > li')].map(el => {
 				return {
 					postInf: {
 						post: el,
@@ -97,7 +97,7 @@ const Asmund = {
 
 		//Все посты без цитат со смайлами
 		getInfEmptyPosts: () => {
-			return [...document.querySelectorAll('.message-list > li')].map(el => {
+			return [...document.querySelectorAll('.forum-theme__list > li')].map(el => {
 					return {
 						postInf: {
 							post: el,
@@ -312,7 +312,7 @@ const Asmund = {
 	//Подсветка цитат удалённых сообщений
 	removeHelper: {
 		getMessages: () => {
-			return [...document.querySelectorAll('#message-list > li')]
+			return [...document.querySelectorAll('.forum-theme__list > li')]
 		},
 		
 		getRemovedIDs: (messages) => {
@@ -336,9 +336,11 @@ const Asmund = {
 			let messages = this.getMessages(),
 				removedMessages = this.getRemovedIDs(messages),
 				result = [];
-
-			if (removedMessages.length == 0) return;
-			this.appendToSessionStorage('deleted_ids', removedMessages);
+			console.log(messages);
+			//console.log('Удалённые посты на этой странице: ' + removedMessages);
+			if (removedMessages.length != 0) {
+				this.appendToSessionStorage('deleted_ids', removedMessages);
+			}
 			let cache_ids = sessionStorage.getItem('deleted_ids');
 			
 			/*let _cache_ids = cache_ids.split(',');			//статистика
@@ -347,7 +349,7 @@ const Asmund = {
 
 			for (let message of messages) {
 				let quotes = message.querySelectorAll(`div.bbCodeQuote[data-post-id]`);
-
+				
 				if (quotes !== null) {
 					for (let el of quotes) {
 						let id = el.dataset.postId;
@@ -365,6 +367,7 @@ const Asmund = {
 		init: function () {
 			if (window.location.pathname.match(/forum\/threads\//)) {
 				let posts = this.getQuotedIDs();
+				//console.log('Цитаты удалённых постов: ' + posts);
 				if (posts == undefined) return;
 				for (let el of posts) {
 					let elem = document.getElementById(`post-${el}`);
@@ -464,7 +467,7 @@ const Asmund = {
 		},
 
 		addsmiles: function () {
-			let f_post = document.querySelector('.message-list > li:not(.upPost)');
+			let f_post = document.querySelector('.forum-theme__list > li:not(.upPost)');
 			let id = f_post.dataset.id;
 			let button = f_post.querySelector('.rate-btn-plus.item.control.rate-btn');
 			if (button == null) return;
@@ -515,7 +518,7 @@ const Asmund = {
 		},
 
 		deleteSmiles: function () {
-			let f_post = document.querySelector('.message-list > li:not(.upPost)');
+			let f_post = document.querySelector('.forum-theme__list > li:not(.upPost)');
 			let smiles = f_post.querySelectorAll('.fav-smiles a');
 			for (let button of smiles) {
 				let That = this;
@@ -539,7 +542,7 @@ const Asmund = {
         init: function () {
 			if (window.location.pathname.match(/forum\/threads/)) {
 				this.addsmiles();
-				let holderList = document.querySelectorAll('.message-list > li:not(.upPost)'), smiles = this.getPinned();
+				let holderList = document.querySelectorAll('.forum-theme__list > li:not(.upPost)'), smiles = this.getPinned();
 				let div = document.createElement('div');
 				div.className = "fav-smiles";
 				$(".postDataHolder").append(div);
@@ -567,9 +570,9 @@ const Asmund = {
 	//Поиск матерных слов в постах
 	searchBadWords: {
 		trigger: ['del(?!\\S)', 'delete', /*'(?<!а|в|г|е|з|и|о|с|т|я)д[еа]л(?!е|ё|о|ь|у|а)',*/ '(?<!ма|шу)хер(?!т|сон|он|ыч|одмг)', '(?<!тра)ху[йяеёил](?!иган|ьн)', 'пизд',
-		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон|це|г|тя|те)нах(?!од|рен|в|ал|ож|од|л)', 'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт)', 'у[её]б', '(?<!в)су[кч](?!куб)',
-		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш|г|щ|ж|б|ц)[ёе]б[ауеиы ]?(?!рд|ф|ю|ст|лей)', 'рофланебало', '(?<!ре|р|а|у|до|ор|лю)бля(?!е|й)', 'д[оа]лб[ао][её]б', '\\*',
-		'(?<!\/)\\#(?!\\w)'],
+		'(?<!ме|й|о|а|ми|ив|и|р|у|спав|тон|це|г|тя|те)нах(?!од|рен|в|ал|ож|од|л)', 'пох(?!о|в|и|уж|л|уд|ук|айп|ав|рен|арас|ейт|рю)', 'у[её]б', '(?<!в)су[кч](?!куб)',
+		'(?<!м|ч|р|к|л|н|ст|ге|д|с|т|в|ш|г|щ|ж|б|ц)(рофлан)?[ёе]б[ауеиы ]?(?!рд|ф|ю|ст|лей)', '(?<!ре|р|а|у|подо|ор|лю)бля(?!е|й)', 'д[оа]лб[ао][её]б', '\\*',
+		'(?<!\/)\\#(?!\\w)', 'discord\\.gg', 'discord\\.io'],
 
         styles: [
             //'border: 1px dashed green',
@@ -649,7 +652,7 @@ const Asmund = {
         },
        
         getStrs: () => {
-			return [...document.querySelectorAll('.message.staff')]; // посты
+			return [...document.querySelectorAll('.forum-theme__list')]; // посты
 		},
 		
 		getStrsPremod: () => {
@@ -682,7 +685,7 @@ const Asmund = {
 				let strsPremod = this.getStrsPremod(),
 					rexp = this.regexp(),
 					styles = this.styles.join('; ');
-				console.log(strsPremod);
+				//console.log(strsPremod);
 				if (strsPremod.length != 0) {
 					for (let str of strsPremod) {
 						if (rexp.test(str.innerHTML)) {
@@ -942,22 +945,61 @@ const Asmund = {
 					//console.log(result);
 				}
 			});
-			console.log(result);
+			//console.log(result);
 			xhr.send();
 			return result;
 		},
 
-		proxycheck: function (id) {
-			let result = this.request(id);
-			console.log(result);
+		getIp: async (id) => {
+			const r = await fetch("/forum/api/moderator/userIpCheck", {
+				method: "POST",
+				headers: { "x-requested-with": "XMLHttpRequest" },
+				body: JSON.stringify({
+					"user_id": id
+				})
+			});
+			return await r.json();
 		},
 
-		init: function () {
+		_proxycheck: async (ip) => {
+			const t = await fetch(`https://proxycheck.io/v2/${ip}`, {
+				method: "GET",
+				mode: 'no-cors',
+				cache: 'no-cache',
+        		credentials: "same-origin",
+				headers: {'Content-Type': 'application/json'}
+			});
+			return await t.json("{}");
+		},
+
+		proxycheck: async function (ip) {
+			let url = `https://proxycheck.io/v2/${ip}`
+			var XHR = ("onload" in new XMLHttpRequest()) ? XMLHttpRequest : XDomainRequest;
+			var xhr = new XHR();
+			//let xhr = new XMLHttpRequest();
+			xhr.open('GET', url);
+			xhr.responseType = 'text';
+			let result;
+			xhr.addEventListener('readystatechange', function () {
+				if ((xhr.readyState == 4) && (xhr.status == 200)) {
+					result = xhr.responseText;
+					console.log(result);
+				}
+			});
+			console.log(result);
+			xhr.send();
+		},
+
+		init: async function () {
 			if (Utils.groupName != "Супермодератор") {
 				return;
 			}
 			let id = 810832;
-			this.proxycheck(id);
+			let ip = await this.getIp(id);
+			console.log(ip.userIp);
+			//this.proxycheck(ip.userIp);
+			let proxy_result = await this._proxycheck(ip);
+			console.log(proxy_result);
 		}
 	},
 
@@ -984,14 +1026,14 @@ const Asmund = {
 			let temp = document.createElement('div');
 			temp.innerHTML = html;
 
-			let time = temp.querySelector('.topic-created-time time').getAttribute('data-time');
+			let time = temp.querySelector('.forum-theme__top-block-time time').getAttribute('data-time');
 			time = parseInt(time, 10);
-			if (now - time <= 5259600) {
+			if (now - time <= 2628000) {
 				return;
-			} else if (temp.querySelectorAll('.message-list > li').length == 1) {	//первый пост на странице
-				let pages = temp.querySelectorAll('.pagination.pull-left.margin-bottom-10 > li');
+			} else if (temp.querySelectorAll('.forum-theme__list > li').length == 1) {	//первый пост на странице
+				let pages = temp.querySelectorAll('.pagination > li');
 				let page = pages[pages.length - 2];
-				page = page.firstChild.getAttribute('href');
+				page = page.querySelector('.pagination__link').getAttribute('href');
 				page = "https://dota2.ru" + page;
 
 				response = await fetch (page);
@@ -1002,14 +1044,15 @@ const Asmund = {
 				time = temp.querySelectorAll('time[data-time]');
 				time = time[time.length - 1]; let date = time.getAttribute('title');
 				time = time.getAttribute('data-time'); time = parseInt(time, 10);
-				if (now - time >= 5259600) {
+				if (now - time >= 2628000) {
 					return date;
 				}
 			} else {															   //на странице есть ещё посты
-				time = temp.querySelectorAll('.post-send-time time[data-time]');
+				time = temp.querySelectorAll('.forum-theme__item-time time[data-time]');
+				console.log(time);
 				time = time[time.length - 2]; let date = time.getAttribute('title');
 				time = time.getAttribute('data-time'); time = parseInt(time, 10);
-				if (now - time >= 5259600) {
+				if (now - time >= 2628000) {
 					return date;
 				}
 			}
@@ -1021,12 +1064,17 @@ const Asmund = {
 			let temp = document.createElement('div');
 			temp.innerHTML = html;
 
-			let add_info = temp.querySelector('#profile-addition-info > div.widget-content.padding-10.text-small > div'); add_info = add_info.lastElementChild.innerText;
-			if (add_info.indexOf("Метки") !== ~false && add_info.indexOf("Отсутствуют") == ~false) {
-				;
-			} else {
-				add_info = undefined;
+			let add_info = Array.prototype.slice.call(temp.querySelectorAll('.forum-profile__left-bar.global-right-bar p'));
+			if (add_info.length == 0) return;
+			for (let item of add_info) {
+				if (item.innerHTML.indexOf("Метки") !== ~false) {
+					add_info = item.textContent;
+					break;
+				} else {
+					add_info = undefined;
+				}
 			}
+
 			return add_info;
 		},
 
@@ -1035,9 +1083,9 @@ const Asmund = {
 				let now = Date.now(); now = now / 1000;
 
 				document.querySelectorAll('.search-results-list li').forEach(el => {
-					if (el.querySelector('.content-type').innerHTML == "Сообщение" || el.querySelector('.content-type').innerHTML == "Правка сообщения") {
+					if (el.querySelector('.content-type').innerHTML == "Сообщение") {
 						let url = el.querySelector('.content-type').getAttribute('href');
-						url = "https://dota2.ru/forum/" + url;
+						url = "https://dota2.ru" + url;
 						let user_url = el.querySelector('.meta a').getAttribute('href');
 						user_url = "https://dota2.ru/forum/" + user_url;
 						this.request_date(url, now)
@@ -1050,7 +1098,6 @@ const Asmund = {
 							meta.append(p);
 							el.classList.add('premod2');
 						})
-
 						this.request_user_info(user_url)
 						.then(result => {
 							if (result == undefined) return;
@@ -1063,11 +1110,12 @@ const Asmund = {
 							console.log(result);
 						})
 					}
-					if (el.querySelector('.content-type').innerHTML == "Тема") {
+
+					if (el.querySelector('.content-type').innerHTML == "Тема" || el.querySelector('.content-type').innerHTML == "Правка сообщения") {
 						let url = el.querySelector('.content-type').getAttribute('href');
-						url = "https://dota2.ru/forum/" + url;
+						url = "https://dota2.ru" + url;
 						let user_url = el.querySelector('.meta a').getAttribute('href');
-						user_url = "https://dota2.ru/forum/" + user_url;
+						user_url = "https://dota2.ru/" + user_url;
 
 						this.request_user_info(user_url)
 						.then(result => {

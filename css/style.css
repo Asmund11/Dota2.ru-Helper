@@ -30,19 +30,20 @@ img.asmund-preview-smiles:hover {
     color: #bee0be;
     position: absolute;
     background: #194c19;
-    top: 9px;
-    left: 175px;
-    width: 24px;
+    top: 32px;
+    left: 152px;
+    width: 23px;
     font-size: 17px;
     clear: unset!important;
     visibility: unset!important;
-    height: calc(100% - 19px)!important;
+    height: calc(100% - 64px)!important;
     border-radius: 0 12px 12px 0;
 }
 
-.asmund-find:not(.deleted) .messageInfo {
-    margin-left: 197px!important;
+.asmund-find:not(.deleted) .forum-theme__item-right {
+    /*margin-left: 197px!important;*/
     border: 2px dashed #194c19;
+    border-left: 0px;
     border-radius: 3px;
 }
 
